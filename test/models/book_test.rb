@@ -160,4 +160,22 @@ class BookTest < ActiveSupport::TestCase
     end
     assert Subject.exists?(subjects(:cyberpunk).id)
   end
+
+  test "title_contains finds books by part of the title, ignoring case" do
+    assert_equal [ books(:one) ], Book.title_contains("dUn").to_a
+    assert_equal [ books(:two) ], Book.title_contains("mancer").to_a
+  end
+
+  test "title_contains returns nothing when no title matches" do
+    assert_empty Book.title_contains("Foundation")
+  end
+
+  test "title_contains matches LIKE wildcards literally" do
+    discount = Book.create!(title: "100% Discount", total_pages: 10)
+    Book.create!(title: "My_Book", total_pages: 10)
+
+    assert_equal [ discount ], Book.title_contains("0%").to_a
+    assert_equal [ discount ], Book.title_contains("%").to_a
+    assert_equal [ "My_Book" ], Book.title_contains("_").pluck(:title)
+  end
 end

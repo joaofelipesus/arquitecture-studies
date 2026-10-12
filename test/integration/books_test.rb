@@ -14,6 +14,28 @@ class BooksTest < ActionDispatch::IntegrationTest
     assert_equal Book.pluck(:title).sort, response.parsed_body.pluck("title").sort
   end
 
+  test "searches books by part of the title" do
+    get books_url, params: { title: "dune" }
+
+    assert_response :ok
+    assert_equal [ "Dune" ], response.parsed_body.pluck("title")
+    assert_equal [ "Frank Herbert" ], response.parsed_body.first["authors"].pluck("name")
+  end
+
+  test "returns an empty list when no title matches the search" do
+    get books_url, params: { title: "Foundation" }
+
+    assert_response :ok
+    assert_empty response.parsed_body
+  end
+
+  test "lists all books when the search is blank" do
+    get books_url, params: { title: " " }
+
+    assert_response :ok
+    assert_equal Book.count, response.parsed_body.size
+  end
+
   test "shows a book" do
     get book_url(@book), as: :json
 

@@ -5,6 +5,8 @@ class Book < ApplicationRecord
   has_many :subjects, through: :book_subjects
   has_many :user_books, dependent: :destroy
 
+  scope :title_contains, ->(term) { where("books.title ILIKE ?", "%#{sanitize_sql_like(term)}%") }
+
   validates :title, presence: true
   validates :total_pages, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
