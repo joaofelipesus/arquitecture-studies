@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+dune_science_fiction:
+  book: one
+  subject: science_fiction
+
+neuromancer_science_fiction:
+  book: two
+  subject: science_fiction
+
+neuromancer_cyberpunk:
+  book: two
+  subject: cyberpunk

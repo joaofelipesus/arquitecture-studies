@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+dune_herbert:
+  author: herbert
+  book: one
+
+neuromancer_gibson:
+  author: gibson
+  book: two

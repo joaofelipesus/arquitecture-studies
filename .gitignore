@@ -31,3 +31,6 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+
+# Ignore the catalog CSVs used by the import:catalog task.
+/lib/tasks/data/
