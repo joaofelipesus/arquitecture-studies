@@ -5,6 +5,7 @@ class Book < ApplicationRecord
   has_many :subjects, through: :book_subjects
 
   validates :title, presence: true
+  validates :total_pages, presence: true, numericality: { only_integer: true, greater_than: 0 }
 
   # Links the book to the author with this name, creating the author when it doesn't exist yet.
   def author_name=(name)

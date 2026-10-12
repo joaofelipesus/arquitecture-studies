@@ -17,7 +17,7 @@ Run generators inside the app container (see below) so they use the project's Ru
 
 Development runs via `docker-compose.yml` + `Dockerfile.dev` (the root `Dockerfile` is the production/Kamal image — don't use it for dev).
 
-- Start: `docker compose up -d` (app on http://localhost:3000, Postgres on 5432)
+- Start: `docker compose up -d` (app on http://localhost:3000, Postgres on host port 5433, so it can run alongside drc-api)
 - Run any Rails command: `docker compose exec app bin/rails <cmd>`
 - Gems live in the `gems` volume; `bundle install` runs on container start.
 - `config/database.yml` reads `DATABASE_HOST` (set to `postgres` by compose) and `DATABASE_USERNAME` (defaults to `postgres`).

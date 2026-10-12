@@ -22,13 +22,14 @@ class BooksTest < ActionDispatch::IntegrationTest
     assert_equal @book.id, body["id"]
     assert_equal "Dune", body["title"]
     assert_equal "1965-08-01", body["release_date"]
+    assert_equal 412, body["total_pages"]
     assert_equal [ "Frank Herbert" ], body["authors"].pluck("name")
     assert_equal [ "Science Fiction" ], body["subjects"].pluck("name")
   end
 
   test "creates a book" do
     assert_difference("Book.count", 1) do
-      post books_url, params: { book: { title: "Foundation", description: "Psychohistory.", release_date: "1951-05-01" } }, as: :json
+      post books_url, params: { book: { title: "Foundation", total_pages: 255, description: "Psychohistory.", release_date: "1951-05-01" } }, as: :json
     end
 
     assert_response :created
@@ -37,11 +38,12 @@ class BooksTest < ActionDispatch::IntegrationTest
     assert_equal "Foundation", book.title
     assert_equal "Psychohistory.", book.description
     assert_equal Date.new(1951, 5, 1), book.release_date
+    assert_equal 255, book.total_pages
   end
 
   test "creates a book linked to an existing author" do
     assert_no_difference("Author.count") do
-      post books_url, params: { book: { title: "Dune Messiah", author_name: "Frank Herbert" } }, as: :json
+      post books_url, params: { book: { title: "Dune Messiah", total_pages: 100, author_name: "Frank Herbert" } }, as: :json
     end
 
     assert_response :created
@@ -51,7 +53,7 @@ class BooksTest < ActionDispatch::IntegrationTest
 
   test "creates a book and a new author" do
     assert_difference({ "Author.count" => 1, "AuthorBook.count" => 1 }) do
-      post books_url, params: { book: { title: "Foundation", author_name: "Isaac Asimov" } }, as: :json
+      post books_url, params: { book: { title: "Foundation", total_pages: 100, author_name: "Isaac Asimov" } }, as: :json
     end
 
     assert_response :created
@@ -59,7 +61,7 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "creates a book with author_name from an unwrapped JSON payload" do
-    post books_url, params: { title: "Foundation", author_name: "Isaac Asimov" }, as: :json
+    post books_url, params: { title: "Foundation", total_pages: 100, author_name: "Isaac Asimov" }, as: :json
 
     assert_response :created
     assert_equal [ "Isaac Asimov" ], response.parsed_body["authors"].pluck("name")
@@ -67,7 +69,7 @@ class BooksTest < ActionDispatch::IntegrationTest
 
   test "creates a book linked to existing and new subjects" do
     assert_difference({ "Subject.count" => 1, "BookSubject.count" => 2 }) do
-      post books_url, params: { book: { title: "Snow Crash", subject_names: [ "Cyberpunk", "Satire" ] } }, as: :json
+      post books_url, params: { book: { title: "Snow Crash", total_pages: 100, subject_names: [ "Cyberpunk", "Satire" ] } }, as: :json
     end
 
     assert_response :created
@@ -76,7 +78,7 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "creates a book with an author and subjects from an unwrapped JSON payload" do
-    post books_url, params: { title: "Snow Crash", author_name: "Neal Stephenson", subject_names: [ "Cyberpunk" ] }, as: :json
+    post books_url, params: { title: "Snow Crash", total_pages: 100, author_name: "Neal Stephenson", subject_names: [ "Cyberpunk" ] }, as: :json
 
     assert_response :created
     assert_equal [ "Neal Stephenson" ], response.parsed_body["authors"].pluck("name")
@@ -84,10 +86,18 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "creates a book without subjects" do
-    post books_url, params: { book: { title: "Snow Crash" } }, as: :json
+    post books_url, params: { book: { title: "Snow Crash", total_pages: 100 } }, as: :json
 
     assert_response :created
     assert_empty response.parsed_body["subjects"]
+  end
+
+  test "updates the total pages of a book" do
+    patch book_url(@book), params: { book: { total_pages: 896 } }, as: :json
+
+    assert_response :ok
+    assert_equal 896, response.parsed_body["total_pages"]
+    assert_equal 896, @book.reload.total_pages
   end
 
   test "updates a book" do
@@ -108,7 +118,7 @@ class BooksTest < ActionDispatch::IntegrationTest
 
   test "creates a book from an unwrapped JSON payload" do
     assert_difference("Book.count", 1) do
-      post books_url, params: { title: "Foundation" }, as: :json
+      post books_url, params: { title: "Foundation", total_pages: 100 }, as: :json
     end
 
     assert_response :created
@@ -116,7 +126,7 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "ignores unpermitted attributes" do
-    post books_url, params: { book: { title: "Foundation", id: 999_999 } }, as: :json
+    post books_url, params: { book: { title: "Foundation", total_pages: 100, id: 999_999 } }, as: :json
 
     assert_response :created
     assert_not_equal 999_999, response.parsed_body["id"]
@@ -126,11 +136,37 @@ class BooksTest < ActionDispatch::IntegrationTest
 
   test "does not create a book without a title" do
     assert_no_difference("Book.count") do
-      post books_url, params: { book: { title: "", description: "No title." } }, as: :json
+      post books_url, params: { book: { title: "", total_pages: 100, description: "No title." } }, as: :json
     end
 
     assert_response :unprocessable_content
     assert_includes response.parsed_body["title"], "can't be blank"
+  end
+
+  test "does not create a book without total pages" do
+    assert_no_difference("Book.count") do
+      post books_url, params: { book: { title: "Foundation" } }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_includes response.parsed_body["total_pages"], "can't be blank"
+  end
+
+  test "does not create a book with invalid total pages" do
+    assert_no_difference("Book.count") do
+      post books_url, params: { book: { title: "Foundation", total_pages: 0 } }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_includes response.parsed_body["total_pages"], "must be greater than 0"
+  end
+
+  test "does not update a book with invalid total pages" do
+    patch book_url(@book), params: { book: { total_pages: -1 } }, as: :json
+
+    assert_response :unprocessable_content
+    assert_includes response.parsed_body["total_pages"], "must be greater than 0"
+    assert_equal 412, @book.reload.total_pages
   end
 
   test "does not create a book with an empty payload" do
@@ -143,7 +179,7 @@ class BooksTest < ActionDispatch::IntegrationTest
 
   test "does not create the author when the book is invalid" do
     assert_no_difference(%w[Book.count Author.count AuthorBook.count]) do
-      post books_url, params: { book: { title: "", author_name: "Isaac Asimov" } }, as: :json
+      post books_url, params: { book: { title: "", total_pages: 100, author_name: "Isaac Asimov" } }, as: :json
     end
 
     assert_response :unprocessable_content
@@ -151,7 +187,7 @@ class BooksTest < ActionDispatch::IntegrationTest
 
   test "does not create subjects when the book is invalid" do
     assert_no_difference(%w[Book.count Subject.count BookSubject.count]) do
-      post books_url, params: { book: { title: "", subject_names: [ "Satire" ] } }, as: :json
+      post books_url, params: { book: { title: "", total_pages: 100, subject_names: [ "Satire" ] } }, as: :json
     end
 
     assert_response :unprocessable_content
@@ -159,7 +195,7 @@ class BooksTest < ActionDispatch::IntegrationTest
 
   test "ignores subject_names that are not a list" do
     assert_no_difference("Subject.count") do
-      post books_url, params: { book: { title: "Snow Crash", subject_names: "Satire" } }, as: :json
+      post books_url, params: { book: { title: "Snow Crash", total_pages: 100, subject_names: "Satire" } }, as: :json
     end
 
     assert_response :created

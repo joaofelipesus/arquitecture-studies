@@ -1,5 +1,5 @@
 class BooksController < ApplicationController
-  wrap_parameters include: %i[ title description release_date author_name subject_names ]
+  wrap_parameters include: %i[ title description release_date total_pages author_name subject_names ]
 
   before_action :set_book, only: %i[ show update destroy ]
 
@@ -48,11 +48,11 @@ class BooksController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def book_params
-      params.expect(book: [ :title, :description, :release_date ])
+      params.expect(book: [ :title, :description, :release_date, :total_pages ])
     end
 
     # author_name and subject_names are only accepted on create; they link the book to existing or new records.
     def new_book_params
-      params.expect(book: [ :title, :description, :release_date, :author_name, subject_names: [] ])
+      params.expect(book: [ :title, :description, :release_date, :total_pages, :author_name, subject_names: [] ])
     end
 end

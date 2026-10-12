@@ -71,7 +71,7 @@ class AuthorsTest < ActionDispatch::IntegrationTest
   end
 
   test "books created with an author_name show up on the author" do
-    post books_url, params: { book: { title: "Dune Messiah", author_name: "Frank Herbert" } }, as: :json
+    post books_url, params: { book: { title: "Dune Messiah", total_pages: 100, author_name: "Frank Herbert" } }, as: :json
     get author_url(@author), as: :json
 
     assert_equal [ "Dune", "Dune Messiah" ], response.parsed_body["books"].pluck("title").sort
