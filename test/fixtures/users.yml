@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice:
+  username: alice
+  bio: Reads mostly science fiction.
+
+bob:
+  username: bob
+  bio: Into cyberpunk and the occasional classic.
