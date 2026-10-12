@@ -12,6 +12,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
 
   app:
     depends_on:
@@ -33,6 +38,11 @@ services:
     env_file:
       - path: .env/dev.secrets
         required: false
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
 
 volumes:
   postgres:
