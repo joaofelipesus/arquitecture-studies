@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:17
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: bash -c "rm -f /usr/src/app/tmp/pids/server.pid && (bundle check || bundle install) && ./bin/rails db:prepare && ./bin/dev -b 0.0.0.0"
+    stdin_open: true
+    tty: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - gems:/gems
+    environment:
+      - DATABASE_HOST=postgres
+    env_file:
+      - path: .env/dev.secrets
+        required: false
+
+volumes:
+  postgres:
+  gems:
