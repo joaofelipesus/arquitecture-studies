@@ -77,4 +77,52 @@ class BookTest < ActiveSupport::TestCase
     end
     assert Author.exists?(authors(:herbert).id)
   end
+
+  test "has many subjects" do
+    assert_equal [ subjects(:cyberpunk), subjects(:science_fiction) ].sort_by(&:id), books(:two).subjects.sort_by(&:id)
+  end
+
+  test "subject_names links existing subjects and creates missing ones" do
+    book = Book.new(title: "Snow Crash", subject_names: [ "Cyberpunk", "Satire" ])
+
+    assert_difference({ "Subject.count" => 1, "BookSubject.count" => 2 }) { book.save! }
+    assert_includes book.subjects, subjects(:cyberpunk)
+    assert_equal [ "Cyberpunk", "Satire" ], book.subjects.map(&:name).sort
+  end
+
+  test "subject_names matches existing subjects ignoring extra whitespace" do
+    book = Book.new(title: "Snow Crash", subject_names: [ "  Science   Fiction " ])
+
+    assert_no_difference("Subject.count") { book.save! }
+    assert_equal [ subjects(:science_fiction) ], book.subjects
+  end
+
+  test "subject_names skips blank and duplicate names" do
+    book = Book.new(title: "Snow Crash", subject_names: [ "Satire", " ", nil, "Satire", " Satire " ])
+
+    assert_difference({ "Subject.count" => 1, "BookSubject.count" => 1 }) { book.save! }
+    assert_equal [ "Satire" ], book.subjects.map(&:name)
+  end
+
+  test "subject_names accepts a single name" do
+    book = Book.new(title: "Snow Crash", subject_names: "Satire")
+
+    book.save!
+    assert_equal [ "Satire" ], book.subjects.map(&:name)
+  end
+
+  test "subject_names does not create subjects when the book is invalid" do
+    book = Book.new(title: "", subject_names: [ "Satire" ])
+
+    assert_no_difference(%w[Subject.count BookSubject.count]) do
+      assert_not book.save
+    end
+  end
+
+  test "removes its subject links but keeps the subjects when destroyed" do
+    assert_difference("BookSubject.count", -2) do
+      books(:two).destroy
+    end
+    assert Subject.exists?(subjects(:cyberpunk).id)
+  end
 end

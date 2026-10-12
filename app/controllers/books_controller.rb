@@ -1,18 +1,18 @@
 class BooksController < ApplicationController
-  wrap_parameters include: %i[ title description release_date author_name ]
+  wrap_parameters include: %i[ title description release_date author_name subject_names ]
 
   before_action :set_book, only: %i[ show update destroy ]
 
   # GET /books
   def index
-    @books = Book.includes(:authors)
+    @books = Book.includes(:authors, :subjects)
 
-    render json: @books, include: :authors
+    render json: @books, include: %i[ authors subjects ]
   end
 
   # GET /books/1
   def show
-    render json: @book, include: :authors
+    render json: @book, include: %i[ authors subjects ]
   end
 
   # POST /books
@@ -20,7 +20,7 @@ class BooksController < ApplicationController
     @book = Book.new(new_book_params)
 
     if @book.save
-      render json: @book, include: :authors, status: :created, location: @book
+      render json: @book, include: %i[ authors subjects ], status: :created, location: @book
     else
       render json: @book.errors, status: :unprocessable_content
     end
@@ -29,7 +29,7 @@ class BooksController < ApplicationController
   # PATCH/PUT /books/1
   def update
     if @book.update(book_params)
-      render json: @book, include: :authors
+      render json: @book, include: %i[ authors subjects ]
     else
       render json: @book.errors, status: :unprocessable_content
     end
@@ -51,8 +51,8 @@ class BooksController < ApplicationController
       params.expect(book: [ :title, :description, :release_date ])
     end
 
-    # author_name is only accepted on create; it links the book to an existing or new author.
+    # author_name and subject_names are only accepted on create; they link the book to existing or new records.
     def new_book_params
-      params.expect(book: [ :title, :description, :release_date, :author_name ])
+      params.expect(book: [ :title, :description, :release_date, :author_name, subject_names: [] ])
     end
 end

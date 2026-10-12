@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_165015) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_165404) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -32,6 +32,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_165015) do
     t.index ["name"], name: "index_authors_on_name", unique: true
   end
 
+  create_table "book_subjects", force: :cascade do |t|
+    t.bigint "book_id", null: false
+    t.bigint "subject_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id", "subject_id"], name: "index_book_subjects_on_book_id_and_subject_id", unique: true
+    t.index ["book_id"], name: "index_book_subjects_on_book_id"
+    t.index ["subject_id"], name: "index_book_subjects_on_subject_id"
+  end
+
   create_table "books", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -40,6 +50,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_165015) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "subjects", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_subjects_on_name", unique: true
+  end
+
   add_foreign_key "author_books", "authors"
   add_foreign_key "author_books", "books"
+  add_foreign_key "book_subjects", "books"
+  add_foreign_key "book_subjects", "subjects"
 end

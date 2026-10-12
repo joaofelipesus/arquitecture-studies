@@ -23,6 +23,7 @@ class BooksTest < ActionDispatch::IntegrationTest
     assert_equal "Dune", body["title"]
     assert_equal "1965-08-01", body["release_date"]
     assert_equal [ "Frank Herbert" ], body["authors"].pluck("name")
+    assert_equal [ "Science Fiction" ], body["subjects"].pluck("name")
   end
 
   test "creates a book" do
@@ -62,6 +63,31 @@ class BooksTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert_equal [ "Isaac Asimov" ], response.parsed_body["authors"].pluck("name")
+  end
+
+  test "creates a book linked to existing and new subjects" do
+    assert_difference({ "Subject.count" => 1, "BookSubject.count" => 2 }) do
+      post books_url, params: { book: { title: "Snow Crash", subject_names: [ "Cyberpunk", "Satire" ] } }, as: :json
+    end
+
+    assert_response :created
+    assert_equal [ "Cyberpunk", "Satire" ], response.parsed_body["subjects"].pluck("name").sort
+    assert_includes subjects(:cyberpunk).books.pluck(:title), "Snow Crash"
+  end
+
+  test "creates a book with an author and subjects from an unwrapped JSON payload" do
+    post books_url, params: { title: "Snow Crash", author_name: "Neal Stephenson", subject_names: [ "Cyberpunk" ] }, as: :json
+
+    assert_response :created
+    assert_equal [ "Neal Stephenson" ], response.parsed_body["authors"].pluck("name")
+    assert_equal [ "Cyberpunk" ], response.parsed_body["subjects"].pluck("name")
+  end
+
+  test "creates a book without subjects" do
+    post books_url, params: { book: { title: "Snow Crash" } }, as: :json
+
+    assert_response :created
+    assert_empty response.parsed_body["subjects"]
   end
 
   test "updates a book" do
@@ -121,6 +147,32 @@ class BooksTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
+  end
+
+  test "does not create subjects when the book is invalid" do
+    assert_no_difference(%w[Book.count Subject.count BookSubject.count]) do
+      post books_url, params: { book: { title: "", subject_names: [ "Satire" ] } }, as: :json
+    end
+
+    assert_response :unprocessable_content
+  end
+
+  test "ignores subject_names that are not a list" do
+    assert_no_difference("Subject.count") do
+      post books_url, params: { book: { title: "Snow Crash", subject_names: "Satire" } }, as: :json
+    end
+
+    assert_response :created
+    assert_empty response.parsed_body["subjects"]
+  end
+
+  test "ignores subject_names on update" do
+    assert_no_difference(%w[Subject.count BookSubject.count]) do
+      patch book_url(@book), params: { book: { title: "Dune (revised)", subject_names: [ "Satire" ] } }, as: :json
+    end
+
+    assert_response :ok
+    assert_equal [ subjects(:science_fiction) ], @book.reload.subjects
   end
 
   test "ignores author_name on update" do
