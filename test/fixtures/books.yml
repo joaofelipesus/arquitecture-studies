@@ -1,11 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  title: MyString
-  description: MyText
-  release_date: 2026-10-12
+  title: Dune
+  description: A desert planet, a noble family and the spice melange.
+  release_date: 1965-08-01
 
 two:
-  title: MyString
-  description: MyText
-  release_date: 2026-10-12
+  title: Neuromancer
+  description: A washed-up hacker is hired for one last job.
+  release_date: 1984-07-01

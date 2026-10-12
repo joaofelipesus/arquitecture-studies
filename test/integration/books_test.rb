@@ -1,7 +1,162 @@
 require "test_helper"
 
 class BooksTest < ActionDispatch::IntegrationTest
-  # test "the truth" do
-  #   assert true
-  # end
+  setup do
+    @book = books(:one)
+  end
+
+  # Happy path
+
+  test "lists all books" do
+    get books_url, as: :json
+
+    assert_response :ok
+    assert_equal Book.pluck(:title).sort, response.parsed_body.pluck("title").sort
+  end
+
+  test "shows a book" do
+    get book_url(@book), as: :json
+
+    assert_response :ok
+    body = response.parsed_body
+    assert_equal @book.id, body["id"]
+    assert_equal "Dune", body["title"]
+    assert_equal "1965-08-01", body["release_date"]
+    assert_equal [ "Frank Herbert" ], body["authors"].pluck("name")
+  end
+
+  test "creates a book" do
+    assert_difference("Book.count", 1) do
+      post books_url, params: { book: { title: "Foundation", description: "Psychohistory.", release_date: "1951-05-01" } }, as: :json
+    end
+
+    assert_response :created
+    book = Book.find(response.parsed_body["id"])
+    assert_equal book_url(book), response.location
+    assert_equal "Foundation", book.title
+    assert_equal "Psychohistory.", book.description
+    assert_equal Date.new(1951, 5, 1), book.release_date
+  end
+
+  test "creates a book linked to an existing author" do
+    assert_no_difference("Author.count") do
+      post books_url, params: { book: { title: "Dune Messiah", author_name: "Frank Herbert" } }, as: :json
+    end
+
+    assert_response :created
+    assert_equal [ authors(:herbert).id ], response.parsed_body["authors"].pluck("id")
+    assert_equal 2, authors(:herbert).books.count
+  end
+
+  test "creates a book and a new author" do
+    assert_difference({ "Author.count" => 1, "AuthorBook.count" => 1 }) do
+      post books_url, params: { book: { title: "Foundation", author_name: "Isaac Asimov" } }, as: :json
+    end
+
+    assert_response :created
+    assert_equal [ "Isaac Asimov" ], response.parsed_body["authors"].pluck("name")
+  end
+
+  test "creates a book with author_name from an unwrapped JSON payload" do
+    post books_url, params: { title: "Foundation", author_name: "Isaac Asimov" }, as: :json
+
+    assert_response :created
+    assert_equal [ "Isaac Asimov" ], response.parsed_body["authors"].pluck("name")
+  end
+
+  test "updates a book" do
+    patch book_url(@book), params: { book: { title: "Dune Messiah" } }, as: :json
+
+    assert_response :ok
+    assert_equal "Dune Messiah", response.parsed_body["title"]
+    assert_equal "Dune Messiah", @book.reload.title
+  end
+
+  test "destroys a book" do
+    assert_difference("Book.count", -1) do
+      delete book_url(@book), as: :json
+    end
+
+    assert_response :no_content
+  end
+
+  test "creates a book from an unwrapped JSON payload" do
+    assert_difference("Book.count", 1) do
+      post books_url, params: { title: "Foundation" }, as: :json
+    end
+
+    assert_response :created
+    assert_equal "Foundation", response.parsed_body["title"]
+  end
+
+  test "ignores unpermitted attributes" do
+    post books_url, params: { book: { title: "Foundation", id: 999_999 } }, as: :json
+
+    assert_response :created
+    assert_not_equal 999_999, response.parsed_body["id"]
+  end
+
+  # Failing path
+
+  test "does not create a book without a title" do
+    assert_no_difference("Book.count") do
+      post books_url, params: { book: { title: "", description: "No title." } }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_includes response.parsed_body["title"], "can't be blank"
+  end
+
+  test "does not create a book with an empty payload" do
+    assert_no_difference("Book.count") do
+      post books_url, params: {}, as: :json
+    end
+
+    assert_response :bad_request
+  end
+
+  test "does not create the author when the book is invalid" do
+    assert_no_difference(%w[Book.count Author.count AuthorBook.count]) do
+      post books_url, params: { book: { title: "", author_name: "Isaac Asimov" } }, as: :json
+    end
+
+    assert_response :unprocessable_content
+  end
+
+  test "ignores author_name on update" do
+    assert_no_difference(%w[Author.count AuthorBook.count]) do
+      patch book_url(@book), params: { book: { title: "Dune (revised)", author_name: "Isaac Asimov" } }, as: :json
+    end
+
+    assert_response :ok
+    assert_equal [ authors(:herbert) ], @book.reload.authors
+  end
+
+  test "does not update a book with a blank title" do
+    patch book_url(@book), params: { book: { title: "" } }, as: :json
+
+    assert_response :unprocessable_content
+    assert_includes response.parsed_body["title"], "can't be blank"
+    assert_equal "Dune", @book.reload.title
+  end
+
+  test "returns not found when showing a missing book" do
+    get book_url(id: 0), as: :json
+
+    assert_response :not_found
+  end
+
+  test "returns not found when updating a missing book" do
+    patch book_url(id: 0), params: { book: { title: "Ghost" } }, as: :json
+
+    assert_response :not_found
+  end
+
+  test "returns not found when destroying a missing book" do
+    assert_no_difference("Book.count") do
+      delete book_url(id: 0), as: :json
+    end
+
+    assert_response :not_found
+  end
 end

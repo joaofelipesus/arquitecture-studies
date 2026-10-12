@@ -10,9 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_164715) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_165015) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "author_books", force: :cascade do |t|
+    t.bigint "author_id", null: false
+    t.bigint "book_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id", "book_id"], name: "index_author_books_on_author_id_and_book_id", unique: true
+    t.index ["author_id"], name: "index_author_books_on_author_id"
+    t.index ["book_id"], name: "index_author_books_on_book_id"
+  end
+
+  create_table "authors", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "biography"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_authors_on_name", unique: true
+  end
 
   create_table "books", force: :cascade do |t|
     t.string "title"
@@ -21,4 +39,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_164715) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
+
+  add_foreign_key "author_books", "authors"
+  add_foreign_key "author_books", "books"
 end

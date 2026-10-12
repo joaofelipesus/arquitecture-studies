@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+herbert:
+  name: Frank Herbert
+  biography: American science fiction author best known for Dune.
+
+gibson:
+  name: William Gibson
+  biography: American-Canadian author who coined the term cyberspace.
