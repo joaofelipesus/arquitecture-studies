@@ -3,6 +3,7 @@ class Book < ApplicationRecord
   has_many :authors, through: :author_books
   has_many :book_subjects, dependent: :destroy
   has_many :subjects, through: :book_subjects
+  has_many :user_books, dependent: :destroy
 
   validates :title, presence: true
   validates :total_pages, presence: true, numericality: { only_integer: true, greater_than: 0 }
