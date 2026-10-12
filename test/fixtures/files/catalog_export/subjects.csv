@@ -1,0 +1,4 @@
+id,created_at,updated_at,name,literary_works_count
+1,2024-01-01 10:00:00 UTC,2024-01-02 10:00:00 UTC,Fantasy,10
+2,2024-01-01 10:00:00 UTC,2024-01-01 10:00:00 UTC,Science Fiction,5
+3,2024-01-01 10:00:00 UTC,2024-01-01 10:00:00 UTC,  Fantasy ,1

@@ -43,3 +43,6 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore the catalog CSVs used by the import:catalog task.
+/lib/tasks/data/

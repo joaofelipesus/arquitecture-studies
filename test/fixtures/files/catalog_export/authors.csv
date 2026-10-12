@@ -1,0 +1,5 @@
+id,created_at,updated_at,name,source,external_id,alternate_names,bio,birth_date,death_date,searchable_name
+10,2024-02-01 10:00:00 UTC,2024-02-01 10:00:00 UTC,J. R. R. Tolkien,open_lib,OL1A,{},,1892-01-03,1973-09-02,j r r tolkien
+11,2024-02-01 10:00:00 UTC,2024-02-01 10:00:00 UTC,J. R. R.  Tolkien,google_api,,{},"English writer, ""Professor"" and philologist.",,,j r r tolkien
+12,2024-02-01 10:00:00 UTC,2024-02-01 10:00:00 UTC,Frank Herbert,open_lib,OL2A,{},Imported bio.,,,frank herbert
+13,2024-02-01 10:00:00 UTC,2024-02-01 10:00:00 UTC,Ursula K. Le Guin,manual,,{},,,,ursula k le guin
