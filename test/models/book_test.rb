@@ -178,4 +178,24 @@ class BookTest < ActiveSupport::TestCase
     assert_equal [ discount ], Book.title_contains("%").to_a
     assert_equal [ "My_Book" ], Book.title_contains("_").pluck(:title)
   end
+
+  test "author_name_contains finds books by part of an author name, ignoring case" do
+    assert_equal [ books(:one) ], Book.author_name_contains("fRANK").to_a
+    assert_equal [ books(:two) ], Book.author_name_contains("gibson").to_a
+  end
+
+  test "author_name_contains returns nothing when no author matches" do
+    assert_empty Book.author_name_contains("Asimov")
+  end
+
+  test "author_name_contains returns each book once" do
+    books(:one).update!(author_name: "Brian Herbert")
+
+    assert_equal [ books(:one) ], Book.author_name_contains("herbert").to_a
+  end
+
+  test "author_name_contains matches LIKE wildcards literally" do
+    assert_empty Book.author_name_contains("%")
+    assert_empty Book.author_name_contains("_")
+  end
 end

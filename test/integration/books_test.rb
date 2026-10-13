@@ -15,22 +15,63 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "searches books by part of the title" do
-    get books_url, params: { title: "dune" }
+    get search_books_url, params: { title: "dune" }
 
     assert_response :ok
     assert_equal [ "Dune" ], response.parsed_body.pluck("title")
     assert_equal [ "Frank Herbert" ], response.parsed_body.first["authors"].pluck("name")
   end
 
+  test "searches books by part of the author name" do
+    get search_books_url, params: { author: "GIBS" }
+
+    assert_response :ok
+    assert_equal [ "Neuromancer" ], response.parsed_body.pluck("title")
+    assert_equal [ "William Gibson" ], response.parsed_body.first["authors"].pluck("name")
+  end
+
+  test "returns all authors of a book matched by one of its authors" do
+    book = books(:two)
+    book.author_name = "Bruce Sterling"
+    book.save!
+
+    get search_books_url, params: { author: "sterling" }
+
+    assert_response :ok
+    assert_equal [ "Neuromancer" ], response.parsed_body.pluck("title")
+    assert_equal [ "Bruce Sterling", "William Gibson" ], response.parsed_body.first["authors"].pluck("name").sort
+  end
+
+  test "searches books by title and author together" do
+    get search_books_url, params: { title: "dune", author: "herbert" }
+
+    assert_response :ok
+    assert_equal [ "Dune" ], response.parsed_body.pluck("title")
+  end
+
+  test "returns an empty list when the title and author belong to different books" do
+    get search_books_url, params: { title: "dune", author: "gibson" }
+
+    assert_response :ok
+    assert_empty response.parsed_body
+  end
+
   test "returns an empty list when no title matches the search" do
-    get books_url, params: { title: "Foundation" }
+    get search_books_url, params: { title: "Foundation" }
+
+    assert_response :ok
+    assert_empty response.parsed_body
+  end
+
+  test "returns an empty list when no author matches the search" do
+    get search_books_url, params: { author: "Asimov" }
 
     assert_response :ok
     assert_empty response.parsed_body
   end
 
   test "lists all books when the search is blank" do
-    get books_url, params: { title: " " }
+    get search_books_url, params: { title: " ", author: "" }
 
     assert_response :ok
     assert_equal Book.count, response.parsed_body.size

@@ -4,10 +4,19 @@ class BooksController < ApplicationController
   before_action :set_book, only: %i[ show update destroy ]
 
   # GET /books
-  # GET /books?title=dune
   def index
     @books = Book.includes(:authors, :subjects)
+
+    render json: @books, include: %i[ authors subjects ]
+  end
+
+  # GET /books/search?title=dune
+  # GET /books/search?author=herbert
+  # GET /books/search?title=dune&author=herbert
+  def search
+    @books = Book.includes(:authors, :subjects)
     @books = @books.title_contains(params[:title]) if params[:title].present?
+    @books = @books.author_name_contains(params[:author]) if params[:author].present?
 
     render json: @books, include: %i[ authors subjects ]
   end
