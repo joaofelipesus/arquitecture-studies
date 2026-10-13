@@ -4,17 +4,25 @@ class BooksController < ApplicationController
   before_action :set_book, only: %i[ show update destroy ]
 
   # GET /books
-  # GET /books?title=dune
   def index
     @books = Book.includes(:authors, :subjects)
-    @books = @books.title_contains(params[:title]) if params[:title].present?
+  end
 
-    render json: @books, include: %i[ authors subjects ]
+  # GET /books/search?title=dune
+  # GET /books/search?author=herbert
+  # GET /books/search?title=dune&author=herbert
+  # Each book also carries "readers": how many users have it, in total and per status.
+  def search
+    @books = Book.includes(:authors, :subjects)
+    @books = @books.title_contains(params[:title]) if params[:title].present?
+    @books = @books.author_name_contains(params[:author]) if params[:author].present?
+    @readers = UserBook.reader_counts_by_book(@books.map(&:id))
+
+    render :index
   end
 
   # GET /books/1
   def show
-    render json: @book, include: %i[ authors subjects ]
   end
 
   # POST /books
