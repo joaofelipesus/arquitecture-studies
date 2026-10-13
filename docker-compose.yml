@@ -66,6 +66,7 @@ services:
     volumes:
       - /:/rootfs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/containerd:/run/containerd:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     command:
