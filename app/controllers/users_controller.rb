@@ -1,6 +1,12 @@
 class UsersController < ApplicationController
   before_action :set_user, only: %i[ show ]
 
+  # GET /users/search?username=ali
+  def search
+    @users = User.order(:username)
+    @users = @users.username_contains(params[:username]) if params[:username].present?
+  end
+
   # GET /users/1
   # Lists the user's books grouped by status, most recently finished, then started, first.
   def show

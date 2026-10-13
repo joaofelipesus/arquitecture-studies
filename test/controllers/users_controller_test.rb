@@ -72,6 +72,42 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert response.parsed_body["user_books"].values.all?(&:empty?)
   end
 
+  test "searches users by username, case-insensitively and by partial match" do
+    get search_users_url(username: "LIC")
+
+    assert_response :ok
+    body = response.parsed_body
+    assert_equal [ "alice" ], body.pluck("username")
+    assert_equal "Reads mostly science fiction.", body.first["bio"]
+  end
+
+  test "returns users ordered by username when searching" do
+    User.create!(username: "aaron")
+
+    get search_users_url(username: "a")
+
+    assert_equal %w[ aaron alice ], response.parsed_body.pluck("username")
+  end
+
+  test "returns an empty list when no username matches" do
+    get search_users_url(username: "nobody")
+
+    assert_response :ok
+    assert_empty response.parsed_body
+  end
+
+  test "treats LIKE wildcards in the search term literally" do
+    get search_users_url(username: "%")
+
+    assert_empty response.parsed_body
+  end
+
+  test "returns all users when searching without a username" do
+    get search_users_url
+
+    assert_equal %w[ alice bob ], response.parsed_body.pluck("username")
+  end
+
   test "returns not found when showing a missing user" do
     get user_url(id: 0)
 

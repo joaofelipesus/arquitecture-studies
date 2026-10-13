@@ -3,7 +3,9 @@ Rails.application.routes.draw do
     patch :update_progress, on: :member
   end
   resources :authors
-  resources :users, only: %i[ show ], defaults: { format: :json }
+  resources :users, only: %i[ show ], defaults: { format: :json } do
+    get :search, on: :collection
+  end
   resources :books, defaults: { format: :json } do
     get :search, on: :collection
   end

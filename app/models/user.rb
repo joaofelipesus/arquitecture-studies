@@ -5,4 +5,6 @@ class User < ApplicationRecord
   normalizes :username, with: ->(username) { username.strip }
 
   validates :username, presence: true, uniqueness: true
+
+  scope :username_contains, ->(term) { where("users.username ILIKE ?", "%#{sanitize_sql_like(term)}%") }
 end
