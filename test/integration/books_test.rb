@@ -70,6 +70,27 @@ class BooksTest < ActionDispatch::IntegrationTest
     assert_empty response.parsed_body
   end
 
+  test "returns the reader counts of each book found" do
+    UserBook.create!(user: users(:bob), book: books(:one), status: :finished, current_page: 412)
+
+    get search_books_url, params: { title: "dune" }
+
+    assert_response :ok
+    expected = { "total" => 2, "want_to_read" => 0, "reading" => 1, "finished" => 1, "stopped" => 0 }
+    assert_equal expected, response.parsed_body.first["readers"]
+  end
+
+  test "returns zero reader counts for a book nobody has" do
+    book = Book.create!(title: "Foundation", total_pages: 255)
+
+    get search_books_url, params: { title: "foundation" }
+
+    assert_response :ok
+    assert_equal [ book.id ], response.parsed_body.pluck("id")
+    expected = { "total" => 0, "want_to_read" => 0, "reading" => 0, "finished" => 0, "stopped" => 0 }
+    assert_equal expected, response.parsed_body.first["readers"]
+  end
+
   test "lists all books when the search is blank" do
     get search_books_url, params: { title: " ", author: "" }
 

@@ -3,7 +3,7 @@ Rails.application.routes.draw do
     patch :update_progress, on: :member
   end
   resources :authors
-  resources :books do
+  resources :books, defaults: { format: :json } do
     get :search, on: :collection
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

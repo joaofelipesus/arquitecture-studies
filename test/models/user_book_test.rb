@@ -224,4 +224,25 @@ class UserBookTest < ActiveSupport::TestCase
   test "users have many books through their user books" do
     assert_equal [ books(:one) ], users(:alice).books
   end
+
+  test "reader_counts_by_book counts the users of each book per status" do
+    UserBook.create!(user: users(:bob), book: books(:one), status: :stopped)
+
+    counts = UserBook.reader_counts_by_book([ books(:one).id, books(:two).id ])
+
+    assert_equal({ "total" => 2, "want_to_read" => 0, "reading" => 1, "finished" => 0, "stopped" => 1 }, counts[books(:one).id])
+    assert_equal({ "total" => 1, "want_to_read" => 0, "reading" => 0, "finished" => 1, "stopped" => 0 }, counts[books(:two).id])
+  end
+
+  test "reader_counts_by_book returns zeros for a book without user books" do
+    book = Book.create!(title: "Foundation", total_pages: 255)
+
+    counts = UserBook.reader_counts_by_book([ book.id ])
+
+    assert_equal({ "total" => 0, "want_to_read" => 0, "reading" => 0, "finished" => 0, "stopped" => 0 }, counts[book.id])
+  end
+
+  test "reader_counts_by_book only counts the given books" do
+    assert_equal [ books(:one).id ], UserBook.reader_counts_by_book([ books(:one).id ]).keys
+  end
 end

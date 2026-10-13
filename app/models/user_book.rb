@@ -16,6 +16,17 @@ class UserBook < ApplicationRecord
   validate :current_page_within_book
   validate :finished_at_not_before_started_at
 
+  # Counts the users of each book, in total and per status, with one grouped query:
+  # { book_id => { "total" => 2, "want_to_read" => 0, "reading" => 1, "finished" => 1, "stopped" => 0 } }
+  def self.reader_counts_by_book(book_ids)
+    counts = book_ids.index_with { statuses.keys.index_with(0) }
+    where(book_id: book_ids).group(:book_id, :status).count.each do |(book_id, status), count|
+      counts[book_id][status] = count
+    end
+
+    counts.transform_values { |by_status| { "total" => by_status.values.sum, **by_status } }
+  end
+
   # Moves the reading to the given page; reaching the last page finishes the book.
   def update_progress(page)
     self.current_page = page
