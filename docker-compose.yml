@@ -30,6 +30,7 @@ services:
     tty: true
     ports:
       - "3000:3000"
+      - "9394:9394" # Prometheus metrics (Puma + Rails)
     volumes:
       - .:/usr/src/app
       - gems:/gems
@@ -44,6 +45,48 @@ services:
           cpus: "1"
           memory: 2G
 
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATA_SOURCE_URI: postgres:5432/postgres?sslmode=disable
+      DATA_SOURCE_USER: postgres
+      DATA_SOURCE_PASS: ""
+    ports:
+      - "9187:9187"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.54.1
+    privileged: true
+    cgroup: host # see the other containers' cgroups (cgroup v2)
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=10s
+    ports:
+      - "8081:8080" # host 8080 is often taken
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    depends_on:
+      - app
+      - postgres-exporter
+      - cadvisor
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus:/prometheus
+    ports:
+      - "9090:9090"
+
 volumes:
   postgres:
   gems:
+  prometheus:

@@ -37,6 +37,13 @@ plugin :tmp_restart
 # Run the Solid Queue supervisor inside of Puma for single-server deployments.
 plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 
+# Expose Puma and Rails metrics (via Yabeda) for Prometheus on a separate port, so they
+# aren't served by the API itself. Defaults to http://0.0.0.0:9394/metrics; override with
+# PROMETHEUS_EXPORTER_PORT. The control app is how the yabeda plugin reads Puma's stats.
+activate_control_app
+plugin :yabeda
+plugin :yabeda_prometheus
+
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
