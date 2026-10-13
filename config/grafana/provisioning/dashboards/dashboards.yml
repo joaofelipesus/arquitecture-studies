@@ -1,0 +1,10 @@
+apiVersion: 1
+
+# Loads every JSON dashboard in config/grafana/dashboards (mounted at /var/lib/grafana/dashboards).
+# Edits made in the UI aren't saved back; export the JSON and replace the file instead.
+providers:
+  - name: books-library
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
