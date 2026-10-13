@@ -9,6 +9,9 @@ class UserBook < ApplicationRecord
     stopped: "stopped"
   }, default: :want_to_read, validate: true
 
+  # Readings without a finished_at/started_at go after the dated ones.
+  scope :most_recent_first, -> { order(arel_table[:finished_at].desc.nulls_last, arel_table[:started_at].desc.nulls_last, id: :desc) }
+
   before_validation :calculate_current_progress
 
   validates :book_id, uniqueness: { scope: :user_id }
