@@ -21,6 +21,7 @@ Development runs via `docker-compose.yml` + `Dockerfile.dev` (the root `Dockerfi
 - Run any Rails command: `docker compose exec app bin/rails <cmd>`
 - Gems live in the `gems` volume; `bundle install` runs on container start.
 - Import the catalog CSVs (books, users and user_books must be empty; it runs in one transaction): `docker compose exec app bin/rails import:catalog` (reads the git-ignored CSVs in `lib/tasks/data/`; pass `"import:catalog[other/dir]"` to use another folder). The logic lives in `lib/import.rb`.
+- Load tests (k6): scripts live in `k6/tests/`; run one with `docker compose run --rm k6 run tests/books_search.js` (the `k6` service is behind the `load-tests` profile, so `docker compose up` doesn't start it; it targets `BASE_URL=http://app:3000`).
 - `config/database.yml` reads `DATABASE_HOST` (set to `postgres` by compose) and `DATABASE_USERNAME` (defaults to `postgres`).
 
 ## Checks
