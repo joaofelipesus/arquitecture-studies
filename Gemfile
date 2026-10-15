@@ -50,3 +50,7 @@ group :development, :test do
 end
 
 gem "csv", "~> 3.3"
+
+gem "yabeda-rails", "~> 0.11.0"
+gem "yabeda-prometheus", "~> 0.9.1"
+gem "yabeda-puma-plugin", "~> 0.9.0"
