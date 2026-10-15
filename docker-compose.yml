@@ -36,6 +36,7 @@ services:
       - gems:/gems
     environment:
       - DATABASE_HOST=postgres
+      - RAILS_ENV=${RAILS_ENV:-development} # k6/run_load_tests.sh sets RAILS_ENV=production
     env_file:
       - path: .env/dev.secrets
         required: false
@@ -86,6 +87,11 @@ services:
     volumes:
       - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-remote-write-receiver # k6 pushes its load test results here
+      - --web.enable-admin-api # lets k6/run_load_tests.sh delete the previous run's k6 series
     ports:
       - "9090:9090"
 
@@ -112,9 +118,14 @@ services:
     profiles: ["load-tests"] # not started by `docker compose up`; run with `docker compose run --rm k6 run tests/<file>.js`
     depends_on:
       - app
+      - prometheus
     working_dir: /scripts
     environment:
       BASE_URL: http://app:3000
+      # Push results to Prometheus (Grafana "Load tests" dashboard).
+      K6_OUT: experimental-prometheus-rw
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
+      K6_PROMETHEUS_RW_TREND_STATS: p(95),avg,min,max
     volumes:
       - ./k6:/scripts:ro
 
