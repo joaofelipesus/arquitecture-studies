@@ -60,7 +60,6 @@ The app can't handle the traffic, and after a few seconds the requests start to 
 
 Add more instances of the web app to handle more requests. A load balancer is needed on top of the app instances to split the traffic between them.
 
-
 Even after adding more replicas of the app and configuring the Nginx load balancer to use the "Round Robin" algorithm to distribute requests between the containers, the performance results are not good as ilustrated in the image below where most og the requests took more than one minute leading to timeout.
 
 ![GET /books/:id response times on Grafana: p95 and max reach the 1 min timeout](docs/img/1_initial_version/results_1.png)
@@ -73,8 +72,10 @@ After include the APM tool it's clear that the bottleneck is the database reques
 
 ## 3. Add indexes and Database fine tuning
 
-Since the application bottleneck is search books, so the first step is to speed up the query.
+Since the application bottleneck is search books, so the first step is to speed up the query. After add trigram index and change the request query the performance is much better, but we stil facing some errors due to overload of the servers, the averge request is fast something around 800ms, but once the apps are overloaded then the request time becomes much higher.
 
-- save values on searchable
-- save values when create or update book, model callback
-- add migration to handle previous records
+![GET /books/search response times on Grafana after the trigram index: p95 peaks at 3.04 s, avg at 634 ms, max under 6 s](docs/img/3_indexes/results_1.png)
+
+23% of the planned requests were not done due to server overload, k6 skipped about 14K requests of the planned 60K requests due to all 1000 users been already in use waiting for requests to finish to start new ones.
+
+## 3. Use cache to reduce latency on simple requests
