@@ -5,9 +5,11 @@ one:
   description: A desert planet, a noble family and the spice melange.
   release_date: 1965-08-01
   total_pages: 412
+  searchable: dune frank herbert # fixtures skip the Book::Searchable callback
 
 two:
   title: Neuromancer
   description: A washed-up hacker is hired for one last job.
   release_date: 1984-07-01
   total_pages: 271
+  searchable: neuromancer william gibson

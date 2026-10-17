@@ -24,7 +24,7 @@ The following actions were covered in the load tests, with traffic split between
 |---|---|---:|
 | Update reading progress | `PATCH /user_books/:id/update_progress` | 25% |
 | Create book | `POST /books` | 16.7% |
-| Search books by title | `GET /books/search` | 16.7% |
+| Search books by title or author | `GET /books/search` | 16.7% |
 | Show user | `GET /users/:id` | 16.7% |
 | Show book | `GET /books/:id` | 8.3% |
 | Search users by username | `GET /users/search` | 8.3% |
@@ -60,7 +60,6 @@ The app can't handle the traffic, and after a few seconds the requests start to 
 
 Add more instances of the web app to handle more requests. A load balancer is needed on top of the app instances to split the traffic between them.
 
-
 Even after adding more replicas of the app and configuring the Nginx load balancer to use the "Round Robin" algorithm to distribute requests between the containers, the performance results are not good as ilustrated in the image below where most og the requests took more than one minute leading to timeout.
 
 ![GET /books/:id response times on Grafana: p95 and max reach the 1 min timeout](docs/img/1_initial_version/results_1.png)
@@ -70,3 +69,13 @@ This time, however, I felt that more visibility was needed. So I'll add an APM t
 After include the APM tool it's clear that the bottleneck is the database requests, mainly the action `books/search` that is taking too long.
 
 ![APM dashboard on Grafana during the load test: 737 ms avg and 4.83 s p95 response time, Apdex 0.85, 98.9% of the time spent in the database](docs/img/1_initial_version/results_2.png)
+
+## 3. Add indexes and Database fine tuning
+
+Since the application bottleneck is search books, so the first step is to speed up the query. After add trigram index and change the request query the performance is much better, but we stil facing some errors due to overload of the servers, the averge request is fast something around 800ms, but once the apps are overloaded then the request time becomes much higher.
+
+![GET /books/search response times on Grafana after the trigram index: p95 peaks at 3.04 s, avg at 634 ms, max under 6 s](docs/img/3_indexes/results_1.png)
+
+23% of the planned requests were not done due to server overload, k6 skipped about 14K requests of the planned 60K requests due to all 1000 users been already in use waiting for requests to finish to start new ones.
+
+## 3. Use cache to reduce latency on simple requests

@@ -8,14 +8,12 @@ class BooksController < ApplicationController
     @books = Book.includes(:authors, :subjects)
   end
 
-  # GET /books/search?title=dune
-  # GET /books/search?author=herbert
-  # GET /books/search?title=dune&author=herbert
+  # GET /books/search?q=dune
+  # GET /books/search?q=dune herbert
+  # One search box over the title and the author names (see Book::Searchable), closest titles first.
   # Each book also carries "readers": how many users have it, in total and per status.
   def search
-    @books = Book.includes(:authors, :subjects)
-    @books = @books.title_contains(params[:title]) if params[:title].present?
-    @books = @books.author_name_contains(params[:author]) if params[:author].present?
+    @books = Book.search(params[:q]).includes(:authors, :subjects)
     @readers = UserBook.reader_counts_by_book(@books.map(&:id))
 
     render :index

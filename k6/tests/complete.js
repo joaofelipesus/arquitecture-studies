@@ -61,7 +61,7 @@ function createBook() {
 }
 
 function searchBooks() {
-  const res = http.get(`${BASE_URL}/books/search?title=${encodeURIComponent(sample(data.book_titles))}`, {
+  const res = http.get(`${BASE_URL}/books/search?q=${encodeURIComponent(sample(data.book_titles))}`, {
     headers: HEADERS,
     timeout: REQUEST_TIMEOUT,
     tags: { name: "GET /books/search" },
