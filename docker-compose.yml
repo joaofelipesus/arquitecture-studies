@@ -78,7 +78,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 2G
+          memory: 1536M # 1.5 GB
 
   # Second instance of the app, with the same image, code, gems, env and resources as `app`.
   app2:

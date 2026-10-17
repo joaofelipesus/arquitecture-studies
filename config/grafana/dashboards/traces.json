@@ -53,10 +53,11 @@
           "uid": "prometheus"
         },
         "query": {
-          "query": "label_values(traces_spanmetrics_calls_total{service=\"books-library\"}, service_instance_id)",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+          "query": "query_result(count by (service_instance_id) (count_over_time(traces_spanmetrics_calls_total{service=\"books-library\"}[$__range])))",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery",
+          "qryType": 3
         },
-        "definition": "label_values(traces_spanmetrics_calls_total{service=\"books-library\"}, service_instance_id)",
+        "definition": "query_result(count by (service_instance_id) (count_over_time(traces_spanmetrics_calls_total{service=\"books-library\"}[$__range])))",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -70,7 +71,8 @@
             "$__all"
           ]
         },
-        "sort": 1
+        "sort": 1,
+        "regex": "/service_instance_id=\"([^\"]+)\"/"
       },
       {
         "name": "min_duration",
