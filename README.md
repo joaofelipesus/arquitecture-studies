@@ -1,7 +1,5 @@
 # README
 
-![GET /books/:id response times on Grafana: p95 and max reach the 1 min timeout](docs/img/1_initial_version/results_1.png)
-
 This project is a case study in software architecture. The objective is to adapt the application and its architecture to handle 1,000 requests per second, and possibly grow to 10,000. To validate the architectural evolution, load tests were added to perform real requests to the API and check the response times. To emulate a real scenario, a dump with hundreds of thousands of records was imported into the database to represent an app with a small amount of data.
 
 
@@ -62,7 +60,12 @@ The app can't handle the traffic, and after a few seconds the requests start to 
 
 Add more instances of the web app to handle more requests. A load balancer is needed on top of the app instances to split the traffic between them.
 
-Even after adding more replicas of the app and configuring the Nginx load balancer to use the "Round Robin" algorithm to distribute requests between the containers, the performance results are not good. This time, however, I felt that more visibility was needed. So I'll add an APM tool to understand where the bottlenecks are.
+
+Even after adding more replicas of the app and configuring the Nginx load balancer to use the "Round Robin" algorithm to distribute requests between the containers, the performance results are not good as ilustrated in the image below where most og the requests took more than one minute leading to timeout.
+
+![GET /books/:id response times on Grafana: p95 and max reach the 1 min timeout](docs/img/1_initial_version/results_1.png)
+
+This time, however, I felt that more visibility was needed. So I'll add an APM tool to understand where the bottlenecks are.
 
 
 
