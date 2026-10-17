@@ -67,5 +67,6 @@ Even after adding more replicas of the app and configuring the Nginx load balanc
 
 This time, however, I felt that more visibility was needed. So I'll add an APM tool to understand where the bottlenecks are. The tools chosed to collect the metrics were Open telemetry to collect metrism and Grafana Tempo to display a dashboard with the metrics collected.
 
+After include the APM tool it's clear that the bottleneck is the database requests, mainly the action `books/search` that is taking too long.
 
-
+![APM dashboard on Grafana during the load test: 737 ms avg and 4.83 s p95 response time, Apdex 0.85, 98.9% of the time spent in the database](docs/img/1_initial_version/results_2.png)
