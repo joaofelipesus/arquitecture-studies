@@ -79,3 +79,5 @@ Since the application bottleneck is search books, so the first step is to speed 
 23% of the planned requests were not done due to server overload, k6 skipped about 14K requests of the planned 60K requests due to all 1000 users been already in use waiting for requests to finish to start new ones.
 
 ## 3. Use cache to reduce latency on simple requests
+
+In order to reduce the servers overload, on this step I'll add a cache layer using Redis, first the routes show book and show user will be cached

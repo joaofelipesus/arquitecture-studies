@@ -15,8 +15,7 @@ gem "jbuilder"
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
-# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
-gem "solid_cache"
+# Use the database-backed adapters for Active Job and Action Cable
 gem "solid_queue"
 gem "solid_cable"
 
@@ -59,3 +58,7 @@ gem "opentelemetry-sdk", "~> 1.13"
 gem "opentelemetry-exporter-otlp", "~> 0.37.0"
 gem "opentelemetry-instrumentation-rails", "~> 0.42.0"
 gem "opentelemetry-instrumentation-pg", "~> 0.37.1"
+
+# Redis (docker-compose.yml `redis` service) for Rails.cache, and Kredis for typed Redis keys on models
+gem "redis", "~> 5.4"
+gem "kredis", "~> 1.8"

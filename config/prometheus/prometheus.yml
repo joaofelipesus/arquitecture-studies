@@ -17,6 +17,11 @@ scrape_configs:
     static_configs:
       - targets: ["postgres-exporter:9187"]
 
+  # Redis memory, keys per database, commands, clients and evictions.
+  - job_name: redis
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
   # Container CPU, memory, network and filesystem usage for every service.
   - job_name: cadvisor
     static_configs:
