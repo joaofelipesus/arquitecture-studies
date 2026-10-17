@@ -1,0 +1,242 @@
+{
+  "uid": "traces",
+  "title": "Request traces",
+  "tags": [
+    "rails",
+    "apm",
+    "traces"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "refresh": "",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "description": "Recent requests from Tempo, and the full trace of the selected one.",
+  "templating": {
+    "list": [
+      {
+        "name": "route",
+        "label": "Route",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"books-library\", span_kind=\"SPAN_KIND_SERVER\"}, span_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(traces_spanmetrics_calls_total{service=\"books-library\", span_kind=\"SPAN_KIND_SERVER\"}, span_name)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"books-library\"}, service_instance_id)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(traces_spanmetrics_calls_total{service=\"books-library\"}, service_instance_id)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "min_duration",
+        "label": "Min duration",
+        "type": "custom",
+        "query": "0ms,100ms,500ms,1s,5s,30s",
+        "current": {
+          "selected": true,
+          "text": "0ms",
+          "value": "0ms"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "0ms",
+            "value": "0ms"
+          },
+          {
+            "selected": false,
+            "text": "100ms",
+            "value": "100ms"
+          },
+          {
+            "selected": false,
+            "text": "500ms",
+            "value": "500ms"
+          },
+          {
+            "selected": false,
+            "text": "1s",
+            "value": "1s"
+          },
+          {
+            "selected": false,
+            "text": "5s",
+            "value": "5s"
+          },
+          {
+            "selected": false,
+            "text": "30s",
+            "value": "30s"
+          }
+        ]
+      },
+      {
+        "name": "trace_id",
+        "label": "Trace id",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        }
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "APM",
+      "type": "link",
+      "url": "/d/apm",
+      "keepTime": true,
+      "icon": "dashboard"
+    },
+    {
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/overview",
+      "keepTime": true,
+      "icon": "dashboard"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requests (most recent first)",
+      "type": "table",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "description": "Click a trace id to show its details below.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"books-library\" && kind = server && name =~ \"${route:regex}\" && resource.service.instance.id =~ \"${instance:regex}\" && duration >= ${min_duration} }",
+          "limit": 100,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "traceID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Show request details",
+                    "url": "/d/traces?${__url_time_range}&${route:queryparam}&${instance:queryparam}&${min_duration:queryparam}&var-trace_id=${__value.raw}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Start time",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "title": "Request details (click a trace id above) ${trace_id}",
+      "type": "traces",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "description": "Every span of the selected request: Rack, controller, views, Active Record and each SQL query, with their attributes.",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 20
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "${trace_id}"
+        }
+      ]
+    }
+  ]
+}

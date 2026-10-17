@@ -54,3 +54,8 @@ gem "csv", "~> 3.3"
 gem "yabeda-rails", "~> 0.11.0"
 gem "yabeda-prometheus", "~> 0.9.1"
 gem "yabeda-puma-plugin", "~> 0.9.0"
+
+gem "opentelemetry-sdk", "~> 1.13"
+gem "opentelemetry-exporter-otlp", "~> 0.37.0"
+gem "opentelemetry-instrumentation-rails", "~> 0.42.0"
+gem "opentelemetry-instrumentation-pg", "~> 0.37.1"

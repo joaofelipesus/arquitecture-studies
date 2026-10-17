@@ -65,7 +65,7 @@ Even after adding more replicas of the app and configuring the Nginx load balanc
 
 ![GET /books/:id response times on Grafana: p95 and max reach the 1 min timeout](docs/img/1_initial_version/results_1.png)
 
-This time, however, I felt that more visibility was needed. So I'll add an APM tool to understand where the bottlenecks are.
+This time, however, I felt that more visibility was needed. So I'll add an APM tool to understand where the bottlenecks are. The tools chosed to collect the metrics were Open telemetry to collect metrism and Grafana Tempo to display a dashboard with the metrics collected.
 
 
 

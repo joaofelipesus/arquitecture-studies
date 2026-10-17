@@ -19,9 +19,12 @@ services:
           memory: 2G
 
   app: &app
+    hostname: app # reported as service.instance.id on the traces
     depends_on:
       postgres:
         condition: service_healthy
+      tempo:
+        condition: service_started
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -42,6 +45,9 @@ services:
     environment:
       - DATABASE_HOST=postgres
       - RAILS_ENV=${RAILS_ENV:-development} # k6/run_load_tests.sh sets RAILS_ENV=production
+      # OpenTelemetry traces, sent to Tempo (config/initializers/opentelemetry.rb).
+      - OTEL_SERVICE_NAME=books-library
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
     env_file:
       - path: .env/dev.secrets
         required: false
@@ -54,6 +60,7 @@ services:
   # Second instance of the app, with the same image, code, gems, env and resources as `app`.
   app2:
     <<: *app
+    hostname: app2
     # Waits for `app`, which installs the gems and prepares the database, so the two don't race on either.
     depends_on:
       app:
@@ -67,6 +74,7 @@ services:
   # Third and fourth instances, same setup as `app2`.
   app3:
     <<: *app
+    hostname: app3
     depends_on:
       app:
         condition: service_healthy
@@ -77,6 +85,7 @@ services:
 
   app4:
     <<: *app
+    hostname: app4
     depends_on:
       app:
         condition: service_healthy
@@ -144,13 +153,27 @@ services:
       - --storage.tsdb.path=/prometheus
       - --web.enable-remote-write-receiver # k6 pushes its load test results here
       - --web.enable-admin-api # lets k6/run_load_tests.sh delete the previous run's k6 series
+      - --enable-feature=exemplar-storage # keeps the trace ids Tempo attaches to its span metrics
     ports:
       - "9090:9090"
+
+  # Stores the apps' OpenTelemetry traces (config/tempo/tempo.yml) and derives span metrics from them,
+  # pushed to Prometheus. Explore them on Grafana with the Tempo data source.
+  tempo:
+    image: grafana/tempo:2.8.2
+    user: root # writes to the tempo volume, which Docker creates owned by root
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./config/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo:/var/tempo
+    ports:
+      - "3200:3200" # query API
 
   grafana:
     image: grafana/grafana:12.2.0
     depends_on:
       - prometheus
+      - tempo
     environment:
       # Local dev only: log in as admin/admin, or browse anonymously as a viewer.
       GF_SECURITY_ADMIN_USER: admin
@@ -186,3 +209,4 @@ volumes:
   gems:
   prometheus:
   grafana:
+  tempo:

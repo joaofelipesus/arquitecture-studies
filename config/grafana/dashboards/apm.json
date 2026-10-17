@@ -1,0 +1,1602 @@
+{
+  "uid": "apm",
+  "title": "APM",
+  "tags": [
+    "rails",
+    "apm",
+    "traces"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "description": "New Relic-style APM view built from Tempo's span metrics (OpenTelemetry traces).",
+  "templating": {
+    "list": [
+      {
+        "name": "route",
+        "label": "Route",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"books-library\", span_kind=\"SPAN_KIND_SERVER\"}, span_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(traces_spanmetrics_calls_total{service=\"books-library\", span_kind=\"SPAN_KIND_SERVER\"}, span_name)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(traces_spanmetrics_calls_total{service=\"books-library\"}, service_instance_id)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(traces_spanmetrics_calls_total{service=\"books-library\"}, service_instance_id)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/overview",
+      "keepTime": true,
+      "icon": "dashboard"
+    },
+    {
+      "title": "Request traces",
+      "type": "link",
+      "url": "/d/traces",
+      "keepTime": true,
+      "icon": "dashboard"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Summary (selected range)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "title": "Avg response time",
+      "type": "stat",
+      "description": "Average duration of the web transactions (server spans).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum (rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])) / sum (rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range]))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 3,
+      "title": "p95 response time",
+      "type": "stat",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Throughput",
+      "type": "stat",
+      "description": "Requests per minute.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])) * 60",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqpm",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Error rate",
+      "type": "stat",
+      "description": "Share of requests that ended with a 5xx (spans with error status). 4xx are not errors, like New Relic's default.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "(sum by () (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\", status_code=\"STATUS_CODE_ERROR\"}[$__range])) / sum by () (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range]))) or (0 * sum by () (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Apdex (T = 0.5s)",
+      "type": "stat",
+      "description": "(satisfied <= 0.5s + tolerating <= 2s / 2) / total.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "(sum(rate(traces_spanmetrics_latency_bucket{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\", le=\"0.5\"}[$__range])) + sum(rate(traces_spanmetrics_latency_bucket{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\", le=\"2\"}[$__range]))) / 2 / sum(rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range]))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.7
+              },
+              {
+                "color": "yellow",
+                "value": 0.85
+              },
+              {
+                "color": "green",
+                "value": 0.94
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Time in database",
+      "type": "stat",
+      "description": "Share of the response time spent waiting on SQL queries (all routes).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum(rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_CLIENT\"}[$__range])) / sum(rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__range]))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "Web transactions",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "title": "Web transactions time (avg per request, all routes)",
+      "type": "timeseries",
+      "description": "Like New Relic's breakdown: the time per request spent in SQL queries, and the rest of the request time.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "(sum(rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) - sum(rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_CLIENT\"}[$__rate_interval]))) / sum(rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
+          "legendFormat": "Ruby (app code, views, middleware)"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "sum(rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_CLIENT\"}[$__rate_interval])) / sum(rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
+          "legendFormat": "Database (PostgreSQL)"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "sum (rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) / sum (rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
+          "legendFormat": "Response time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 30,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Response time"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Apdex score (T = 0.5s)",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "(sum(rate(traces_spanmetrics_latency_bucket{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\", le=\"0.5\"}[$__rate_interval])) + sum(rate(traces_spanmetrics_latency_bucket{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\", le=\"2\"}[$__rate_interval]))) / 2 / sum(rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval]))",
+          "legendFormat": "Apdex"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Throughput by route",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval])) * 60",
+          "legendFormat": "{{span_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqpm",
+          "custom": {
+            "fillOpacity": 30,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Error rate by route",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "(sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\", status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval])) / sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval]))) or (0 * sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval])))",
+          "legendFormat": "{{span_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Top 5 transactions by time consumed",
+      "type": "timeseries",
+      "description": "Total time spent serving each route per second (requests per second x avg duration): where the app's capacity goes.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "topk(5, sum by (span_name) (rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval])))",
+          "legendFormat": "{{span_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 30,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "p95 response time by route",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval])))",
+          "legendFormat": "{{span_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Transactions",
+      "type": "table",
+      "description": "Selected range. Click a transaction to see its traces.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (span_name) (increase(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])) / scalar(sum(increase(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])))",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])) / sum by (span_name) (rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range]))",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])))",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "D",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])) * 60",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "E",
+          "expr": "(sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\", status_code=\"STATUS_CODE_ERROR\"}[$__range])) / sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range]))) or (0 * sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__range])))",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #A"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #D"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "reqpm"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #E"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "span_name"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Show this route's traces",
+                    "url": "/d/traces?${__url_time_range}&var-route=${__value.raw}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Time consumed",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "span_name": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "Value #D": 4,
+              "Value #E": 5
+            },
+            "renameByName": {
+              "span_name": "Transaction",
+              "Value #A": "Time consumed",
+              "Value #B": "Avg",
+              "Value #C": "p95",
+              "Value #D": "Throughput",
+              "Value #E": "Error rate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "Database",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 17,
+      "title": "Database time by operation (avg per request)",
+      "type": "timeseries",
+      "description": "SQL time per web request, by statement type (SELECT, INSERT, ...).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (operation) (label_replace(rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_CLIENT\"}[$__rate_interval]), \"operation\", \"$1\", \"span_name\", \"(\\\\S+).*\")) / scalar(sum(rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])))",
+          "legendFormat": "{{operation}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 30,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "Queries per request",
+      "type": "timeseries",
+      "description": "A high or growing count points to N+1 queries.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 39,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_CLIENT\"}[$__rate_interval])) / sum(rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
+          "legendFormat": "SQL queries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_INTERNAL\", span_name=~\".+ query\"}[$__rate_interval])) / sum(rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
+          "legendFormat": "Active Record loads"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "Top 5 Active Record operations by time consumed",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 47,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "topk(5, sum by (span_name) (rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_INTERNAL\", span_name=~\".+ query\"}[$__rate_interval])))",
+          "legendFormat": "{{span_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 30,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "Active Record operations",
+      "type": "table",
+      "description": "Selected range.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 47,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (span_name) (increase(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_INTERNAL\", span_name=~\".+ query\"}[$__range])) / scalar(sum(increase(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_INTERNAL\", span_name=~\".+ query\"}[$__range])))",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_INTERNAL\", span_name=~\".+ query\"}[$__range])) / sum by (span_name) (rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_INTERNAL\", span_name=~\".+ query\"}[$__range]))",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "C",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_INTERNAL\", span_name=~\".+ query\"}[$__range])) * 60",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #A"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value #C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "cpm"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Time consumed",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "span_name": 0,
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3
+            },
+            "renameByName": {
+              "span_name": "Operation",
+              "Value #A": "Time consumed",
+              "Value #B": "Avg",
+              "Value #C": "Calls"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "row",
+      "title": "Instances",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 22,
+      "title": "Avg response time by instance",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (service_instance_id) (rate(traces_spanmetrics_latency_sum{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval])) / sum by (service_instance_id) (rate(traces_spanmetrics_latency_count{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval]))",
+          "legendFormat": "{{service_instance_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "title": "Throughput by instance",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (service_instance_id) (rate(traces_spanmetrics_calls_total{service=\"books-library\", service_instance_id=~\"$instance\", span_kind=\"SPAN_KIND_SERVER\", span_name=~\"${route:regex}\"}[$__rate_interval])) * 60",
+          "legendFormat": "{{service_instance_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqpm",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "title": "CPU by instance (1 = one core; limit is 1 core)",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 64,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_project=\"books-library\", container_label_com_docker_compose_service=~\"app[0-9]*\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "title": "Memory by instance",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 64,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{container_label_com_docker_compose_project=\"books-library\", container_label_com_docker_compose_service=~\"app[0-9]*\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "title": "Busy Puma threads by instance",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 64,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A",
+          "expr": "label_replace(sum by (instance) (puma_busy_threads), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")",
+          "legendFormat": "{{host}}"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "B",
+          "expr": "max(puma_max_threads)",
+          "legendFormat": "max per instance"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ]
+}
