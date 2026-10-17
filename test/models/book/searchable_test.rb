@@ -30,23 +30,17 @@ class Book::SearchableTest < ActiveSupport::TestCase
   end
 
   test "search finds books by part of the title or an author name, ignoring case" do
-    dune = Book.create!(title: "Dune", total_pages: 100, author_name: "Frank Herbert")
-    neuromancer = Book.create!(title: "Neuromancer", total_pages: 100, author_name: "William Gibson")
-
-    assert_equal [ dune ], Book.search("dUn").to_a
-    assert_equal [ neuromancer ], Book.search("GIBSON").to_a
+    assert_equal [ books(:one) ], Book.search("dUn").to_a
+    assert_equal [ books(:two) ], Book.search("GIBSON").to_a
   end
 
   test "search requires every word, in any order and across title and authors" do
-    dune = Book.create!(title: "Dune", total_pages: 100, author_name: "Frank Herbert")
     Book.create!(title: "Dune Messiah", total_pages: 100, author_name: "Someone Else")
 
-    assert_equal [ dune ], Book.search("herbert  dune").to_a
+    assert_equal [ books(:one) ], Book.search("herbert  dune").to_a
   end
 
   test "search returns nothing when no book matches" do
-    Book.create!(title: "Dune", total_pages: 100, author_name: "Frank Herbert")
-
     assert_empty Book.search("asimov")
   end
 

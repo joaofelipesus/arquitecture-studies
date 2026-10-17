@@ -7,12 +7,6 @@ class Book < ApplicationRecord
   has_many :subjects, through: :book_subjects
   has_many :user_books, dependent: :destroy
 
-  scope :title_contains, ->(term) { where("books.title ILIKE ?", "%#{sanitize_sql_like(term)}%") }
-  # Uses a subquery instead of a join so the matched books still load all of their authors.
-  scope :author_name_contains, ->(term) {
-    where(id: AuthorBook.joins(:author).where("authors.name ILIKE ?", "%#{sanitize_sql_like(term)}%").select(:book_id))
-  }
-
   validates :title, presence: true
   validates :total_pages, presence: true, numericality: { only_integer: true, greater_than: 0 }
 

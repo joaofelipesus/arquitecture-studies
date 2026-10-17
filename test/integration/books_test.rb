@@ -15,7 +15,7 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "searches books by part of the title" do
-    get search_books_url, params: { title: "dune" }
+    get search_books_url, params: { q: "dune" }
 
     assert_response :ok
     assert_equal [ "Dune" ], response.parsed_body.pluck("title")
@@ -23,7 +23,7 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "searches books by part of the author name" do
-    get search_books_url, params: { author: "GIBS" }
+    get search_books_url, params: { q: "GIBS" }
 
     assert_response :ok
     assert_equal [ "Neuromancer" ], response.parsed_body.pluck("title")
@@ -35,45 +35,48 @@ class BooksTest < ActionDispatch::IntegrationTest
     book.author_name = "Bruce Sterling"
     book.save!
 
-    get search_books_url, params: { author: "sterling" }
+    get search_books_url, params: { q: "sterling" }
 
     assert_response :ok
     assert_equal [ "Neuromancer" ], response.parsed_body.pluck("title")
     assert_equal [ "Bruce Sterling", "William Gibson" ], response.parsed_body.first["authors"].pluck("name").sort
   end
 
-  test "searches books by title and author together" do
-    get search_books_url, params: { title: "dune", author: "herbert" }
+  test "searches books by title and author words together" do
+    get search_books_url, params: { q: "herbert dune" }
 
     assert_response :ok
     assert_equal [ "Dune" ], response.parsed_body.pluck("title")
   end
 
-  test "returns an empty list when the title and author belong to different books" do
-    get search_books_url, params: { title: "dune", author: "gibson" }
+  test "returns an empty list when the words belong to different books" do
+    get search_books_url, params: { q: "dune gibson" }
 
     assert_response :ok
     assert_empty response.parsed_body
   end
 
-  test "returns an empty list when no title matches the search" do
-    get search_books_url, params: { title: "Foundation" }
+  test "returns an empty list when nothing matches the search" do
+    get search_books_url, params: { q: "Foundation" }
 
     assert_response :ok
     assert_empty response.parsed_body
   end
 
-  test "returns an empty list when no author matches the search" do
-    get search_books_url, params: { author: "Asimov" }
+  test "returns the closest titles first" do
+    Book.create!(title: "Arrakis", total_pages: 100, author_name: "Dune Fan")
+    Book.create!(title: "Children of Dune", total_pages: 100, author_name: "Frank Herbert")
+
+    get search_books_url, params: { q: "dune" }
 
     assert_response :ok
-    assert_empty response.parsed_body
+    assert_equal [ "Dune", "Children of Dune", "Arrakis" ], response.parsed_body.pluck("title")
   end
 
   test "returns the reader counts of each book found" do
     UserBook.create!(user: users(:bob), book: books(:one), status: :finished, current_page: 412)
 
-    get search_books_url, params: { title: "dune" }
+    get search_books_url, params: { q: "dune" }
 
     assert_response :ok
     expected = { "total" => 2, "want_to_read" => 0, "reading" => 1, "finished" => 1, "stopped" => 0 }
@@ -83,7 +86,7 @@ class BooksTest < ActionDispatch::IntegrationTest
   test "returns zero reader counts for a book nobody has" do
     book = Book.create!(title: "Foundation", total_pages: 255)
 
-    get search_books_url, params: { title: "foundation" }
+    get search_books_url, params: { q: "foundation" }
 
     assert_response :ok
     assert_equal [ book.id ], response.parsed_body.pluck("id")
@@ -92,7 +95,7 @@ class BooksTest < ActionDispatch::IntegrationTest
   end
 
   test "lists all books when the search is blank" do
-    get search_books_url, params: { title: " ", author: "" }
+    get search_books_url, params: { q: " " }
 
     assert_response :ok
     assert_equal Book.count, response.parsed_body.size

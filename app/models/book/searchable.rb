@@ -9,11 +9,15 @@ module Book::Searchable
 
   class_methods do
     # Books whose title or author names contain every word of the term, ignoring case: "dune herbert"
-    # matches "dune frank herbert". A blank term returns every book.
+    # matches "dune frank herbert". The closest titles come first, so "Dune" ranks above "Children of Dune"
+    # and books matched only by an author come last. A blank term returns every book.
     def search(term)
-      term.to_s.downcase.split.reduce(all) do |books, word|
-        books.where("books.searchable LIKE ?", "%#{sanitize_sql_like(word)}%")
-      end
+      words = term.to_s.downcase.split
+      return all if words.empty?
+
+      words
+        .reduce(all) { |books, word| books.where("books.searchable LIKE ?", "%#{sanitize_sql_like(word)}%") }
+        .order(sanitize_sql_for_order([ Arel.sql("similarity(books.title, ?) DESC, books.id"), words.join(" ") ]))
     end
   end
 

@@ -24,7 +24,7 @@ The following actions were covered in the load tests, with traffic split between
 |---|---|---:|
 | Update reading progress | `PATCH /user_books/:id/update_progress` | 25% |
 | Create book | `POST /books` | 16.7% |
-| Search books by title | `GET /books/search` | 16.7% |
+| Search books by title or author | `GET /books/search` | 16.7% |
 | Show user | `GET /users/:id` | 16.7% |
 | Show book | `GET /books/:id` | 8.3% |
 | Search users by username | `GET /users/search` | 8.3% |
