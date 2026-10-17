@@ -62,13 +62,13 @@ Add more instances of the web app to handle more requests. A load balancer is ne
 
 Even after adding more replicas of the app and configuring the Nginx load balancer to use the "Round Robin" algorithm to distribute requests between the containers, the performance results are not good as ilustrated in the image below where most og the requests took more than one minute leading to timeout.
 
-![GET /books/:id response times on Grafana: p95 and max reach the 1 min timeout](docs/img/1_initial_version/results_1.png)
+![GET /books/:id response times on Grafana: p95 and max reach the 1 min timeout](docs/img/2_more_instances/results_1.png)
 
 This time, however, I felt that more visibility was needed. So I'll add an APM tool to understand where the bottlenecks are. The tools chosed to collect the metrics were Open telemetry to collect metrism and Grafana Tempo to display a dashboard with the metrics collected.
 
 After include the APM tool it's clear that the bottleneck is the database requests, mainly the action `books/search` that is taking too long.
 
-![APM dashboard on Grafana during the load test: 737 ms avg and 4.83 s p95 response time, Apdex 0.85, 98.9% of the time spent in the database](docs/img/1_initial_version/results_2.png)
+![APM dashboard on Grafana during the load test: 737 ms avg and 4.83 s p95 response time, Apdex 0.85, 98.9% of the time spent in the database](docs/img/2_more_instances/results_2.png)
 
 ## 3. Add indexes and Database fine tuning
 
@@ -78,6 +78,11 @@ Since the application bottleneck is search books, so the first step is to speed 
 
 23% of the planned requests were not done due to server overload, k6 skipped about 14K requests of the planned 60K requests due to all 1000 users been already in use waiting for requests to finish to start new ones.
 
-## 3. Use cache to reduce latency on simple requests
+## 4. Use cache to reduce latency on simple requests
 
-In order to reduce the servers overload, on this step I'll add a cache layer using Redis, first the routes show book and show user will be cached
+In order to reduce the servers overload, on this step I'll add a cache layer using Redis, first the routes show book and show user will be cached.
+
+After add the Redis service to the arquitecture, and cache show user and show book to be cached, the requests skipped by k6 decreased from 23% to 6%, **which means that now the application can handle more traffic before overload**.
+
+![k6 results before and after caching show book and show user: dropped requests fell from 23.7% to 5.8%, p95 from 2.97 s to 903 ms](docs/img/4_cache/results_1.png)
+
