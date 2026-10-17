@@ -89,4 +89,8 @@ After add the Redis service to the arquitecture, and cache show user and show bo
 
 ![k6 results before and after caching show book and show user: dropped requests fell from 23.7% to 5.8%, p95 from 2.97 s to 903 ms](docs/img/4_cache/results_1.png)
 
+Given the request times with and without cache the results were very good, so the cache layer will be kept. The most important factor fixed was the p95 and p99 response times, that are the ones that has the requests that overloads the servers and make new users waiting in the queue to be served.
+
+![GET /books/:id and GET /books/search response times on Grafana without and with cache: p95 drops from about 5 s to about 900 ms on both routes](docs/img/4_cache/results_2.png)
+
 # 5. Increase the number of applications but decreasing the power of each service
