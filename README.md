@@ -32,7 +32,7 @@ The follow actions were covered in the load tests, splitting the traffic between
 
 Before run the load tests using the script `k6/run_load_tests.sh` the database is re-created using the dump to make sure all tests run in the same conditions, also the web app is executed in production to avoid any extra latency added by developing tools.
 
-## Initial architecture and first results
+## 1. Initial architecture and first results
 
 The first implementation do not have any optimization, and the architecture as is simple as possible, using only one instance of the rails app and one postgreSQL.
 
@@ -51,3 +51,11 @@ Resources:
 Results:
 
 ![Initial results: k6 load test summary and request duration per route on Grafana](docs/img/1_initial_verstion/initial-results.png)
+
+Conclusion:
+
+The app can't handle the trafic, and after a few seconds the requests start to timeout.
+
+## 2. Increase the number of web app instances
+
+Add more instance of the web app to be able to handle more requests, there is needed to add a load balancer on top of the app instances to split the traffice between them.
