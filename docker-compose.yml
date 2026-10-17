@@ -1,8 +1,12 @@
 services:
   postgres:
     image: postgres:17
+    # pg_hba.conf also lets postgres-replica connect for replication. max_slot_wal_keep_size caps the WAL kept for a
+    # replica that stops reading, so a dead replica can't fill the disk (it then has to be rebuilt).
+    command: ["postgres", "-c", "hba_file=/etc/postgresql/pg_hba.conf", "-c", "max_slot_wal_keep_size=4GB"]
     volumes:
       - postgres:/var/lib/postgresql/data
+      - ./config/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
@@ -12,6 +16,32 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+
+  # Read-only streaming replica of `postgres`. Its first boot (empty volume) copies the primary with pg_basebackup,
+  # then it replays the primary's WAL continuously (config/postgres/replica-entrypoint.sh). To rebuild it from
+  # scratch: docker compose rm -sf postgres-replica && docker volume rm books-library_postgres-replica.
+  postgres-replica:
+    image: postgres:17
+    user: postgres
+    entrypoint: ["bash", "/usr/local/bin/replica-entrypoint.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - postgres-replica:/var/lib/postgresql/data
+      - ./config/postgres/replica-entrypoint.sh:/usr/local/bin/replica-entrypoint.sh:ro
+    ports:
+      - "5434:5432" # 5433 is the primary
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 60 # the first boot copies the whole primary
     deploy:
       resources:
         limits:
@@ -241,6 +271,7 @@ services:
 
 volumes:
   postgres:
+  postgres-replica:
   gems:
   prometheus:
   grafana:

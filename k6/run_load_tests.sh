@@ -16,29 +16,20 @@ DB_USER=books_library # production username in config/database.yml (Postgres use
 
 psql() { docker compose exec -T postgres psql -U postgres -v ON_ERROR_STOP=1 -q "$@"; }
 
-restart_postgres() {
-  docker compose restart postgres
-  until docker compose exec -T postgres pg_isready -U postgres -q; do sleep 1; done
+# Waits until postgres-replica has replayed everything the primary has written so far.
+wait_for_replica() {
+  local lsn
+  lsn=$(psql -At -c "SELECT pg_current_wal_lsn()")
+  until [ "$(docker compose exec -T postgres-replica psql -U postgres -At -c "SELECT pg_last_wal_replay_lsn() >= '$lsn'")" = t ]; do
+    sleep 1
+  done
 }
 
-# Postgres can't fully disable WAL. wal_level=minimal lets the single-transaction restore skip WAL for the
-# tables it creates, and turning off fsync/full_page_writes/synchronous_commit removes the rest of the disk syncs.
-wal_off() {
-  psql -c "ALTER SYSTEM SET wal_level = minimal" -c "ALTER SYSTEM SET max_wal_senders = 0" \
-       -c "ALTER SYSTEM SET fsync = off" -c "ALTER SYSTEM SET full_page_writes = off" -c "ALTER SYSTEM SET synchronous_commit = off"
-  restart_postgres
-}
-
-wal_on() {
-  psql -c "ALTER SYSTEM RESET wal_level" -c "ALTER SYSTEM RESET max_wal_senders" \
-       -c "ALTER SYSTEM RESET fsync" -c "ALTER SYSTEM RESET full_page_writes" -c "ALTER SYSTEM RESET synchronous_commit"
-  restart_postgres
-}
-
-# setup env for testing (the app instances are stopped while Postgres restarts and the database is replaced)
+# setup env for testing (the app instances are stopped while the database is replaced)
 docker compose stop "${APPS[@]}"
-docker compose up -d postgres
+docker compose up -d postgres postgres-replica
 until docker compose exec -T postgres pg_isready -U postgres -q; do sleep 1; done
+until docker compose exec -T postgres-replica pg_isready -U postgres -q; do sleep 1; done
 
 # create the production role (CREATEDB lets db:prepare create the queue/cable databases)
 psql <<SQL
@@ -47,9 +38,8 @@ DO \$\$ BEGIN
 END \$\$;
 SQL
 
-# restore the database with WAL off, turning it back on even if the restore fails
-wal_off
-trap wal_on EXIT
+# restore the database. WAL stays on (no wal_level=minimal shortcut): postgres-replica copies the restore by
+# replaying it, and a standby can't replay WAL written at the minimal level.
 # drop the solid queue/cable databases too, so db:prepare recreates them empty when the app boots
 for db in "$DB" "${DB}_queue" "${DB}_cable"; do
   psql -c "DROP DATABASE IF EXISTS $db WITH (FORCE)"
@@ -59,8 +49,6 @@ psql -c "CREATE DATABASE $DB OWNER $DB_USER"
 docker compose exec -T postgres pg_restore -U "$DB_USER" -d "$DB" --single-transaction --no-owner --no-privileges < k6/restore.dump
 # the dump comes from development; mark it as production so Rails' protected environment checks apply
 psql -d "$DB" -c "UPDATE ar_internal_metadata SET value = 'production' WHERE key = 'environment'" -c "ANALYZE"
-trap - EXIT
-wal_on
 
 # start the app instances in production mode, the load balancer and the metrics stack, and wait for them to answer
 docker compose up -d "${APPS[@]}" nginx prometheus grafana
@@ -74,6 +62,9 @@ k6/prepare_data.sh
 
 # start every run with an empty Redis (cache and Kredis keys), so a previous run's cache doesn't speed this one up
 docker compose exec -T redis redis-cli FLUSHALL
+
+# make sure the replica has the whole restore and the migrations the apps ran on boot before the test starts
+wait_for_replica
 
 # run tests on k6
 docker compose run --rm k6 run tests/complete.js
