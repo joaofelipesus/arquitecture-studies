@@ -94,3 +94,13 @@ Given the request times with and without cache the results were very good, so th
 ![GET /books/:id and GET /books/search response times on Grafana without and with cache: p95 drops from about 5 s to about 900 ms on both routes](docs/img/4_cache/results_2.png)
 
 # 5. Increase the number of applications but decreasing the power of each service
+
+Just increase the number of replicas or workers in the app didn't perform as expected, given the increase of usage and hardware limitations the application strugle earlie, resulting on response queue faster which degradate the performance earlie as well.
+
+![GET /books/:id response times on Grafana for two load test runs: the second reaches 24 s p95, 3.03 s avg and about 38 s max](docs/img/5_more_instances/results_1.png)
+
+After go back to four instances I decrease the RAM memory per container to be 1.5GB, which proved that it wasn't the bottleneck, the skipped requests increase from 6% to 8% but I'll keep using 1.5GB.
+
+# 6. Postgres reading replica
+
+
