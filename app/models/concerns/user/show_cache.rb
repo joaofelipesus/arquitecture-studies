@@ -1,7 +1,7 @@
-# Caches the GET /books/:id response in Rails.cache (Redis), so showing a cached book doesn't touch the database.
-# The entry is deleted whenever the book, its authors or its subjects change: here for the book itself, and in
-# Author, Subject, AuthorBook and BookSubject for the rest.
-module Book::ShowCache
+# Caches the GET /users/:id response in Rails.cache (Redis), so showing a cached user doesn't touch the database.
+# The page lists the user's readings with their books, so the entry is deleted when the user, one of their
+# readings (UserBook) or one of those books changes (Book::ShowCache.expire_cached_pages).
+module User::ShowCache
   extend ActiveSupport::Concern
 
   included do
@@ -10,7 +10,7 @@ module Book::ShowCache
 
   class_methods do
     def show_cache_key(id)
-      "books/show/#{id}"
+      "users/show/#{id}"
     end
 
     def expire_show_cache(ids)

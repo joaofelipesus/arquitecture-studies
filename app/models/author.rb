@@ -6,6 +6,6 @@ class Author < ApplicationRecord
 
   validates :name, presence: true, uniqueness: true
 
-  # The cached book pages include the author's name and biography.
-  after_update_commit { Book.expire_show_cache(book_ids) }
+  # The cached book and user pages include the author's name and biography.
+  after_update_commit { Book.expire_cached_pages(book_ids) }
 end
