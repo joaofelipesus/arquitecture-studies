@@ -70,3 +70,11 @@ This time, however, I felt that more visibility was needed. So I'll add an APM t
 After include the APM tool it's clear that the bottleneck is the database requests, mainly the action `books/search` that is taking too long.
 
 ![APM dashboard on Grafana during the load test: 737 ms avg and 4.83 s p95 response time, Apdex 0.85, 98.9% of the time spent in the database](docs/img/1_initial_version/results_2.png)
+
+## 3. Add indexes and Database fine tuning
+
+Since the application bottleneck is search books, so the first step is to speed up the query.
+
+- save values on searchable
+- save values when create or update book, model callback
+- add migration to handle previous records

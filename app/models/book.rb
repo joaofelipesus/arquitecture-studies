@@ -1,4 +1,6 @@
 class Book < ApplicationRecord
+  include Searchable
+
   has_many :author_books, dependent: :destroy
   has_many :authors, through: :author_books
   has_many :book_subjects, dependent: :destroy
