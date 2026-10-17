@@ -82,6 +82,9 @@ Since the application bottleneck is search books, so the first step is to speed 
 
 In order to reduce the servers overload, on this step I'll add a cache layer using Redis, first the routes show book and show user will be cached.
 
+![Current architecture: nginx load balancing four Rails app instances, which use Redis as a cache and PostgreSQL as the database](docs/img/4_cache/architecture.png)
+
+
 After add the Redis service to the arquitecture, and cache show user and show book to be cached, the requests skipped by k6 decreased from 23% to 6%, **which means that now the application can handle more traffic before overload**.
 
 ![k6 results before and after caching show book and show user: dropped requests fell from 23.7% to 5.8%, p95 from 2.97 s to 903 ms](docs/img/4_cache/results_1.png)
