@@ -89,3 +89,4 @@ After add the Redis service to the arquitecture, and cache show user and show bo
 
 ![k6 results before and after caching show book and show user: dropped requests fell from 23.7% to 5.8%, p95 from 2.97 s to 903 ms](docs/img/4_cache/results_1.png)
 
+# 5. Increase the number of applications but decreasing the power of each service
