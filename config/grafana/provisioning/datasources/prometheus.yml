@@ -8,3 +8,8 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: false
+    jsonData:
+      # Links the exemplars on Tempo's span metrics to their traces.
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo

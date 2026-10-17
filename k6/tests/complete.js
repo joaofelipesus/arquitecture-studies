@@ -5,6 +5,9 @@ import { SharedArray } from "k6/data";
 
 const BASE_URL = __ENV.BASE_URL || "http://localhost:3000";
 const HEADERS = { "Content-Type": "application/json", Accept: "application/json" };
+// A request still waiting after this long fails as a timeout (k6's default is 60s). Keep it below nginx's
+// proxy_read_timeout (config/nginx/nginx.conf), or slow requests fail as nginx 504s instead.
+const REQUEST_TIMEOUT = __ENV.REQUEST_TIMEOUT || "120s";
 
 // Real rows sampled from the database by k6/prepare_data.sh.
 const data = new SharedArray("data", () => [JSON.parse(open("../data/data.json"))])[0];
@@ -30,7 +33,7 @@ export const options = {
   // Drops the url tag (one series per id) so requests are grouped by the `name` tag set on each call.
   systemTags: ["status", "method", "name", "scenario", "expected_response", "check"],
   // Response time is only reported, not enforced: the load keeps stepping up however slow the app gets, and the
-  // run stops early once the server is down, i.e. more than 10% of requests fail (errors or k6's 60s timeout).
+  // run stops early once the server is down, i.e. more than 10% of requests fail (errors or REQUEST_TIMEOUT).
   thresholds: {
     http_req_failed: [{ threshold: "rate<0.1", abortOnFail: true, delayAbortEval: "10s" }],
   },
@@ -52,7 +55,7 @@ function createBook() {
         subject_names: ["Load Testing"],
       },
     }),
-    { headers: HEADERS, tags: { name: "POST /books" } },
+    { headers: HEADERS, timeout: REQUEST_TIMEOUT, tags: { name: "POST /books" } },
   );
   check(res, { "books create: 201": (r) => r.status === 201 });
 }
@@ -60,6 +63,7 @@ function createBook() {
 function searchBooks() {
   const res = http.get(`${BASE_URL}/books/search?title=${encodeURIComponent(sample(data.book_titles))}`, {
     headers: HEADERS,
+    timeout: REQUEST_TIMEOUT,
     tags: { name: "GET /books/search" },
   });
   check(res, { "books search: 200": (r) => r.status === 200 });
@@ -68,6 +72,7 @@ function searchBooks() {
 function showBook() {
   const res = http.get(`${BASE_URL}/books/${sample(data.book_ids)}`, {
     headers: HEADERS,
+    timeout: REQUEST_TIMEOUT,
     tags: { name: "GET /books/:id" },
   });
   check(res, { "books show: 200": (r) => r.status === 200 });
@@ -76,6 +81,7 @@ function showBook() {
 function searchUsers() {
   const res = http.get(`${BASE_URL}/users/search?username=${encodeURIComponent(sample(data.usernames))}`, {
     headers: HEADERS,
+    timeout: REQUEST_TIMEOUT,
     tags: { name: "GET /users/search" },
   });
   check(res, { "users search: 200": (r) => r.status === 200 });
@@ -84,6 +90,7 @@ function searchUsers() {
 function showUser() {
   const res = http.get(`${BASE_URL}/users/${sample(data.user_ids)}`, {
     headers: HEADERS,
+    timeout: REQUEST_TIMEOUT,
     tags: { name: "GET /users/:id" },
   });
   check(res, { "users show: 200": (r) => r.status === 200 });
@@ -94,6 +101,7 @@ function createUserBook() {
   const pair = data.new_user_books[exec.scenario.iterationInTest % data.new_user_books.length];
   const res = http.post(`${BASE_URL}/user_books`, JSON.stringify({ user_book: pair }), {
     headers: HEADERS,
+    timeout: REQUEST_TIMEOUT,
     tags: { name: "POST /user_books" },
   });
   check(res, { "user_books create: 201": (r) => r.status === 201 });
@@ -105,7 +113,7 @@ function updateProgress() {
   const res = http.patch(
     `${BASE_URL}/user_books/${userBook.id}/update_progress`,
     JSON.stringify({ user_book: { current_page: currentPage } }),
-    { headers: HEADERS, tags: { name: "PATCH /user_books/:id/update_progress" } },
+    { headers: HEADERS, timeout: REQUEST_TIMEOUT, tags: { name: "PATCH /user_books/:id/update_progress" } },
   );
   check(res, { "user_books update_progress: 200": (r) => r.status === 200 });
 }

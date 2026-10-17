@@ -10,7 +10,7 @@ scrape_configs:
   # Rails request metrics (yabeda-rails) and Puma stats (yabeda-puma-plugin).
   - job_name: rails
     static_configs:
-      - targets: ["app:9394"]
+      - targets: ["app:9394", "app2:9394", "app3:9394", "app4:9394"]
 
   # PostgreSQL internals: connections, transactions, locks, database sizes, ...
   - job_name: postgres
