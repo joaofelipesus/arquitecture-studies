@@ -2,6 +2,7 @@ class BooksController < ApplicationController
   wrap_parameters include: %i[ title description release_date total_pages author_name subject_names ]
 
   before_action :set_book, only: %i[ update destroy ]
+  around_action :read_from_primary, only: %i[ show ]
 
   # GET /books
   def index

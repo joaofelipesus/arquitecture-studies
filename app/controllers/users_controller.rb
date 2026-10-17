@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+  around_action :read_from_primary, only: %i[ show ]
+
   # GET /users/search?username=ali
   def search
     @users = User.order(:username)

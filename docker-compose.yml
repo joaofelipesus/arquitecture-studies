@@ -93,6 +93,7 @@ services:
       - gems:/gems
     environment:
       - DATABASE_HOST=postgres
+      - DATABASE_REPLICA_HOST=postgres-replica # reading role (config/database.yml)
       - RAILS_ENV=${RAILS_ENV:-development} # k6/run_load_tests.sh sets RAILS_ENV=production
       # OpenTelemetry traces, sent to Tempo (config/initializers/opentelemetry.rb).
       - OTEL_SERVICE_NAME=books-library

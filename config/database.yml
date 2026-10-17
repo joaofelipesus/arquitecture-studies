@@ -22,10 +22,21 @@ default: &default
   username: <%= ENV.fetch("DATABASE_USERNAME") { "postgres" } %>
   port: 5432
 
+# Read-only streaming replica (docker-compose.yml `postgres-replica`). ApplicationRecord sends the reading role here,
+# which GET requests use (config/initializers/multi_db.rb). Falls back to the primary's host outside Docker, where
+# there's no replica.
+replica: &replica
+  host: <%= ENV.fetch("DATABASE_REPLICA_HOST") { ENV["DATABASE_HOST"] } %>
+  replica: true
+
 
 development:
-  <<: *default
-  database: books_library_development
+  primary:
+    <<: *default
+    database: books_library_development
+  primary_replica:
+    <<: [ *replica, *default ] # replica first: in a merge list the earlier mapping wins
+    database: books_library_development
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -58,8 +69,15 @@ development:
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
-  <<: *default
-  database: books_library_test
+  primary:
+    <<: *default
+    database: books_library_test
+  # The test "replica" is the test database itself: Rails then shares one connection between the two roles, so
+  # reads see the fixtures and the data written inside each test's transaction.
+  primary_replica:
+    <<: *default
+    database: books_library_test
+    replica: true
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -93,6 +111,8 @@ production:
     database: books_library_production
     username: books_library
     password: <%= ENV["BOOKS_LIBRARY_DATABASE_PASSWORD"] %>
+  primary_replica:
+    <<: [ *replica, *primary_production ]
   queue:
     <<: *primary_production
     database: books_library_production_queue
