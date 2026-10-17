@@ -28,4 +28,38 @@ class Book::SearchableTest < ActiveSupport::TestCase
     assert_includes searchable, "frank herbert"
     assert_includes searchable, "brian herbert"
   end
+
+  test "search finds books by part of the title or an author name, ignoring case" do
+    dune = Book.create!(title: "Dune", total_pages: 100, author_name: "Frank Herbert")
+    neuromancer = Book.create!(title: "Neuromancer", total_pages: 100, author_name: "William Gibson")
+
+    assert_equal [ dune ], Book.search("dUn").to_a
+    assert_equal [ neuromancer ], Book.search("GIBSON").to_a
+  end
+
+  test "search requires every word, in any order and across title and authors" do
+    dune = Book.create!(title: "Dune", total_pages: 100, author_name: "Frank Herbert")
+    Book.create!(title: "Dune Messiah", total_pages: 100, author_name: "Someone Else")
+
+    assert_equal [ dune ], Book.search("herbert  dune").to_a
+  end
+
+  test "search returns nothing when no book matches" do
+    Book.create!(title: "Dune", total_pages: 100, author_name: "Frank Herbert")
+
+    assert_empty Book.search("asimov")
+  end
+
+  test "search returns every book when the term is blank" do
+    assert_equal Book.count, Book.search(" ").count
+    assert_equal Book.count, Book.search(nil).count
+  end
+
+  test "search matches LIKE wildcards literally" do
+    discount = Book.create!(title: "100% Discount", total_pages: 10)
+    Book.create!(title: "My_Book", total_pages: 10)
+
+    assert_equal [ discount ], Book.search("0%").to_a
+    assert_equal [ "My_Book" ], Book.search("_").pluck(:title)
+  end
 end
