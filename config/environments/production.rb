@@ -44,8 +44,9 @@ Rails.application.configure do
   config.active_support.report_deprecations = false
 
   # Replace the default in-process memory cache store with Redis, shared by all the app instances. Uses its own
-  # Redis database (1), apart from Kredis' (0, config/redis/shared.yml).
-  config.cache_store = :redis_cache_store, { url: ENV.fetch("REDIS_CACHE_URL", "redis://localhost:6379/1") }
+  # Redis database (1), apart from Kredis' (0, config/redis/shared.yml); the namespace keeps the production
+  # entries apart from development's in that database.
+  config.cache_store = :redis_cache_store, { url: ENV.fetch("REDIS_CACHE_URL", "redis://localhost:6379/1"), namespace: "production" }
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   config.active_job.queue_adapter = :solid_queue

@@ -5,4 +5,7 @@ class Subject < ApplicationRecord
   normalizes :name, with: ->(name) { name.squish }
 
   validates :name, presence: true, uniqueness: true
+
+  # The cached book pages include the subject's name.
+  after_update_commit { Book.expire_show_cache(book_ids) }
 end

@@ -187,7 +187,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --web.enable-remote-write-receiver # k6 pushes its load test results here
-      - --web.enable-admin-api # lets k6/run_load_tests.sh delete the previous run's k6 series
+      - --web.enable-admin-api # allows deleting series by hand (e.g. an old load test run's k6_* series)
       - --enable-feature=exemplar-storage # keeps the trace ids Tempo attaches to its span metrics
     ports:
       - "9090:9090"

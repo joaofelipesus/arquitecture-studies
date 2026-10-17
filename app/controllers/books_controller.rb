@@ -1,7 +1,7 @@
 class BooksController < ApplicationController
   wrap_parameters include: %i[ title description release_date total_pages author_name subject_names ]
 
-  before_action :set_book, only: %i[ show update destroy ]
+  before_action :set_book, only: %i[ update destroy ]
 
   # GET /books
   def index
@@ -20,7 +20,15 @@ class BooksController < ApplicationController
   end
 
   # GET /books/1
+  # Served from Rails.cache (Redis) when it's there, without touching the database; otherwise the book is loaded
+  # and rendered, and the JSON cached. Book::ShowCache deletes the entry whenever the book changes.
   def show
+    json = Rails.cache.fetch(Book.show_cache_key(params.expect(:id)), expires_in: 12.hours) do
+      @book = Book.includes(:authors, :subjects).find(params.expect(:id))
+      render_to_string(:show)
+    end
+
+    render json: json
   end
 
   # POST /books

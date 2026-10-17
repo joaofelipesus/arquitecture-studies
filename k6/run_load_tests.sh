@@ -72,11 +72,6 @@ until curl -sf -o /dev/null http://localhost:8000/up; do sleep 1; done
 # sample real ids/titles/usernames for the tests
 k6/prepare_data.sh
 
-# clear the previous run from the Grafana "Load tests" dashboard by deleting every k6 series from Prometheus
-until curl -sf -o /dev/null http://localhost:9090/-/ready; do sleep 1; done
-curl -sf -X POST -g 'http://localhost:9090/api/v1/admin/tsdb/delete_series?match[]={__name__=~"k6_.*"}'
-curl -sf -X POST http://localhost:9090/api/v1/admin/tsdb/clean_tombstones
-
 # start every run with an empty Redis (cache and Kredis keys), so a previous run's cache doesn't speed this one up
 docker compose exec -T redis redis-cli FLUSHALL
 
