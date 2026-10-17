@@ -40,7 +40,7 @@ docker compose stop "${APPS[@]}"
 docker compose up -d postgres
 until docker compose exec -T postgres pg_isready -U postgres -q; do sleep 1; done
 
-# create the production role (CREATEDB lets db:prepare create the cache/queue/cable databases)
+# create the production role (CREATEDB lets db:prepare create the queue/cable databases)
 psql <<SQL
 DO \$\$ BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$DB_USER') THEN CREATE ROLE $DB_USER LOGIN CREATEDB; END IF;
@@ -50,8 +50,8 @@ SQL
 # restore the database with WAL off, turning it back on even if the restore fails
 wal_off
 trap wal_on EXIT
-# drop the solid cache/queue/cable databases too, so db:prepare recreates them empty when the app boots
-for db in "$DB" "${DB}_cache" "${DB}_queue" "${DB}_cable"; do
+# drop the solid queue/cable databases too, so db:prepare recreates them empty when the app boots
+for db in "$DB" "${DB}_queue" "${DB}_cable"; do
   psql -c "DROP DATABASE IF EXISTS $db WITH (FORCE)"
 done
 psql -c "CREATE DATABASE $DB OWNER $DB_USER"
@@ -72,10 +72,8 @@ until curl -sf -o /dev/null http://localhost:8000/up; do sleep 1; done
 # sample real ids/titles/usernames for the tests
 k6/prepare_data.sh
 
-# clear the previous run from the Grafana "Load tests" dashboard by deleting every k6 series from Prometheus
-until curl -sf -o /dev/null http://localhost:9090/-/ready; do sleep 1; done
-curl -sf -X POST -g 'http://localhost:9090/api/v1/admin/tsdb/delete_series?match[]={__name__=~"k6_.*"}'
-curl -sf -X POST http://localhost:9090/api/v1/admin/tsdb/clean_tombstones
+# start every run with an empty Redis (cache and Kredis keys), so a previous run's cache doesn't speed this one up
+docker compose exec -T redis redis-cli FLUSHALL
 
 # run tests on k6
 docker compose run --rm k6 run tests/complete.js

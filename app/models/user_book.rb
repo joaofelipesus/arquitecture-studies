@@ -13,6 +13,8 @@ class UserBook < ApplicationRecord
   scope :most_recent_first, -> { order(arel_table[:finished_at].desc.nulls_last, arel_table[:started_at].desc.nulls_last, id: :desc) }
 
   before_validation :calculate_current_progress
+  # The user's cached page lists their readings.
+  after_commit { User.expire_show_cache(user_id) }
 
   validates :book_id, uniqueness: { scope: :user_id }
   validates :current_page, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

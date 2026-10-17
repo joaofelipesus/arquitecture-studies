@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  include ShowCache
+
   has_many :user_books, dependent: :destroy
   has_many :books, through: :user_books
 
