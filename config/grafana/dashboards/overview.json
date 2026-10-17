@@ -1451,7 +1451,7 @@
             "uid": "prometheus"
           },
           "refId": "A",
-          "expr": "sum by (db) (redis_db_keys)",
+          "expr": "sum by (db) (redis_db_keys) > 0",
           "legendFormat": "{{db}}"
         }
       ],
